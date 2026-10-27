@@ -27,3 +27,8 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+audit:
+  crypto:
+    master-key-base64: ${AUDIT_MASTER_KEY_BASE64:}
+  payload:
+    protected-paths: ${AUDIT_PROTECTED_PATHS:/accountNumber,/personalIdentifier}

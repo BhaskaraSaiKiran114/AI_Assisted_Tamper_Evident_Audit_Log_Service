@@ -1,6 +1,6 @@
 # Architecture baseline
 
-Status: M1 baseline, authorized for foundation by user on 2026-10-28. Business behavior below is planned, not implemented. See requirements, ADRs, and milestone evidence for current status.
+Status: M1 baseline plus M2 ingestion implementation, authorized by the user on 2026-10-28. Ingestion, event/key schema and transactional chaining are implemented. Query/verification, JWT, lifecycle, export and reporting remain planned. Exact implemented encoding and key-management boundaries are in `encoding-v1.md` and M2 evidence.
 
 ## Components and dependencies
 
@@ -22,7 +22,7 @@ flowchart LR
   Reporting --> Trust[Signing key and external checkpoints]
 ```
 
-Packages will separate `api`, `security`, `audit`, `lifecycle`, `reporting`, and `persistence`. M1 creates bootstrap/security only. Keys/checkpoint trust must have access boundaries separate from event mutation privileges; the local prototype's key store is not an enterprise KMS.
+Packages separate `api`, `security`, `audit` and `persistence`; lifecycle/reporting will follow. M2 stores wrapped field keys in payload_key, with the master key outside the database (ephemeral only for H2). Runtime key/event privilege separation and checkpoints remain future work; this is not an enterprise KMS.
 
 ## Persistence model
 
@@ -34,7 +34,7 @@ Packages will separate `api`, `security`, `audit`, `lifecycle`, `reporting`, and
 | payload_key | event_id + field path + key version, independently protected key material/status | Added with redactable ingestion representation and erased in M5 |
 | lifecycle_action | action ID/type, target IDs/paths, reason, operator, policy version, timestamp, linked administrative event | Transactionally coordinated with archival/redaction in M5 |
 
-Prefer SQL-standard types supported by both databases. Exact PostgreSQL binary/text mappings and indexes belong to the M2 migration. Index actor/sequence, resource type+ID/sequence, event type/sequence, and occurrence time as justified by query plans. Runtime privileges differ from schema-owner migration credentials before deployment; Compose's local owner account is not a production permission model.
+V2 uses BYTEA (also supported by H2 PostgreSQL mode), TEXT, UUID and TIMESTAMP(6) WITH TIME ZONE. Indexes cover actor/sequence, resource type+ID/sequence, event type/sequence and occurrence time; query-plan tuning remains M3/M8. Runtime privileges must differ from migration-owner credentials before deployment; Compose's local owner account is not a production permission model.
 
 ## Append and chain contract
 

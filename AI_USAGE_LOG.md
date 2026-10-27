@@ -29,6 +29,21 @@ Dates use Asia/Calcutta. Entries describe observed work, not reconstructed human
 - Repository linkage: these artifacts belong to the M1 change set. No commit identifier is claimed until a real commit exists; use Git history to link this entry when committed.
 - Human review: pending. No candidate attestation or external submission performed.
 
+## AI-003 - milestone 2 append-only ingestion
+
+- Date: 2026-10-28, Asia/Calcutta. Tool: OpenAI Codex desktop assistant; no additional agents.
+- Human prompt: "now implement Milestone 2". Authorization limited to M2; no M3 implementation started.
+- Intent/criteria: validate bounded event input, freeze deterministic encoding and hash vectors, persist an append-only hash chain atomically, protect future-redactable payload values, prove concurrency/rollback on H2 and PostgreSQL, update evidence/governance.
+- Generated: ingestion controller/service/parser, custom canonicalizer, field protection/key wrapping, transactional JDBC appender, V2 schema, shared reference tests, isolated Windows PostgreSQL runner, CI database configuration, encoding contract and milestone documentation.
+- Accepted: database row locking and exact canonical bytes; AES-GCM protected values before hashing; external master key for persistent PostgreSQL; H2-only ephemeral key; keep runtime business access denied until M4.
+- Edited/refined: corrected Spring ProblemDetail argument type; added full-envelope independent hash vector; changed Windows pg_ctl handling to explicit process handles/output files and bounded waits; require disposable database name/consent before reference connections; added manual development history reference to actual M1 commit 522fac7.
+- Rejected: binary floating-point JSON normalization, plaintext-sensitive-value digests, plaintext field keys in the database, filesystem key writes requiring rollback cleanup, a permissive application security profile, treating H2-only concurrency as PostgreSQL proof, signing the candidate statement, or claiming query/verification/redaction complete.
+- Tools/context: read repository governance/spec, inspected bundled Java/Jackson APIs locally using javap, used Python hashlib for independent vectors and Maven/JUnit for validation. Existing PostgreSQL binaries supplied a separate cluster; no external source searches or source-assignment upload required.
+- Iterations/failures: compile type mismatch corrected; initial H2 run 26 passing cases; one extra golden vector then final suite passed 35. Initial PostgreSQL process handling stalled; cleanup diagnosed stale temporary PID state. A misidentified pg_ctl termination attempt was denied and stopped no process; the existing service remained running. Runner then successfully created/stopped its own isolated cluster. See M2 ledger for candid details.
+- Validation: Java 21 `-Ppostgres-it clean verify` passed at 01:35:43; 27 Surefire + 8 PostgreSQL Failsafe tests, no failures/errors/skips, zero Checkstyle violations, executable JAR. PostgreSQL version tested: 16.3. A final pointer-escape guard refinement was covered by the existing configuration test and normal clean verify rerun (27 cases) passed at 01:40:36. CI/Compose 17.6 and vulnerability scan remain unexecuted. Optional Python YAML parsing was unavailable; no automated YAML-validation claim is made.
+- Artifacts/traceability: A-01 ingestion and A-05 chaining; A-02 API mutation absence only (runtime database grants still M4); B-02/B-03 protected representation foundation, not redaction. See encoding contract, traceability and `docs/validation/milestone-2.md`.
+- Human review/commit: acceptance pending; personal attestation unsigned; M2 change set is uncommitted at delivery. No fabricated commit or external publication.
+
 ## Entry template for subsequent milestones
 
 Record date, human task, intent, constraints, acceptance criteria, context, AI/tool identity, generated/edited/rejected work and rationale, affected requirements/files, actual checks and failures, limitations, human review, and actual commit references when available. Never place credentials or sensitive payloads in prompts or this log.

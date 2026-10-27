@@ -1,6 +1,6 @@
 # ADR-002: Versioned SHA-256 chain and transactional head
 
-Date: 2026-10-28. Status: design baseline; exact encoding and implementation M2/M3.
+Date: 2026-10-28. Status: append/encoding implemented in M2; full-chain verification planned M3. Exact framing and golden vectors are frozen in `../encoding-v1.md`.
 
 Decision: canonical bytes commit identity, sequence, event fields, timestamps, protected payload and predecessor. SHA-256 with domain/version framing, zero genesis, singleton lock and atomic event/head persistence. Preserve bytes; verify searchable columns against them using a consistent snapshot.
 

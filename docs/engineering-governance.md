@@ -2,7 +2,7 @@
 
 ## Ownership and authority
 
-The candidate owns correctness, execution, maintainability, authorship and readiness claims. AI assists bounded tasks and supplies reviewable outputs. M1 is authorized; later milestones require further instruction. No agent has signed or submitted on the candidate's behalf.
+The candidate owns correctness, execution, maintainability, authorship and readiness claims. AI assists bounded tasks and supplies reviewable outputs. M1 and M2 were authorized separately; M3-M8 require further instruction. No agent has signed or submitted on the candidate's behalf.
 
 The assignment is confidential context. Keep its source out of the repository and public services. Web checks use generic public technology queries. Use synthetic examples only; never submit credentials, tokens, private keys, client identifiers/payloads or unreviewed logs to AI.
 
@@ -25,9 +25,9 @@ Each milestone has intent, constraints, dependencies and acceptance criteria. AI
 | Tests/package | Surefire/Failsafe and executable Boot JAR via clean verify | Foundation tests now; scenario suites with behavior |
 | Dependency security | Opt-in security-audit profile, CVSS >=7 failure | Requires current external data; no pass claimed until executed |
 | Secrets | Ignore rules, diff review, targeted secret inspection | Manual foundation review; dedicated automation by M8 |
-| PostgreSQL | Real migrations, transaction/concurrency/privilege tests | M2/M8; daemon unavailable at foundation inspection |
+| PostgreSQL | Real migrations and transaction/concurrency tests | M2 passed on isolated PostgreSQL 16.3 without Docker; deployment-role/17.6 checks remain later work |
 | Performance | Recorded environment, workload, latency/throughput/verification time | M8; no invented production SLO |
-| Human review | Requirement-linked artifact acceptance | Pending for M1 delivery |
+| Human review | Requirement-linked artifact acceptance | Pending for delivered M1/M2 outputs |
 
 CI runs on push/pull request when intentionally hosted. Adding a workflow is not executing it or authorization to publish. Dependency scanning may contact advisory services; never upload confidential source or secrets.
 

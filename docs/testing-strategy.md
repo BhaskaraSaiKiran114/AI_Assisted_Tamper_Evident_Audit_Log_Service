@@ -2,7 +2,7 @@
 
 `./mvnw clean verify` (Windows `.\mvnw.cmd clean verify`) enforces Java 21, runs Checkstyle, compiles/tests and packages the Boot JAR. `FoundationIntegrationTest` starts H2/Flyway/Security and checks genesis initialization, minimal health and denied audit/docs access. It tests infrastructure, not future business behavior.
 
-Surefire runs `*Test`; Failsafe is configured for future `*IT` tests. The H2 integration test intentionally runs in the mandatory Surefire gate without Docker. No scenario tests exist yet.
+Surefire runs `*Test`; normal verify runs 27 unit/H2 cases without Docker. The explicit postgres-it profile enables Failsafe `*IT` tests: 8 shared append-contract tests validated locally on PostgreSQL 16.3. Consent and an isolated audit_m2_test database are required. The Windows runner creates/stops a new cluster; CI is configured for a disposable PostgreSQL 17.6 service, whose external execution is not yet claimed. See M2 validation and README for commands.
 
 | Milestone | Checks to add |
 | --- | --- |
@@ -14,7 +14,7 @@ Surefire runs `*Test`; Failsafe is configured for future `*IT` tests. The H2 int
 | M7 | Account-access vocabulary, permissions, account/actor/time/action/outcome filters, restricted fields and source completeness assumption |
 | M8 | PostgreSQL A/B/C walkthrough, SQL tamper demonstration, fresh setup, security scan, measured performance and live-change rehearsal |
 
-PostgreSQL establishes locking/isolation/types/privileges. H2 mode cannot establish those. Add actual reference-database automation in M2; do not silently skip it and claim success. If Docker is unavailable, use an explicitly configured disposable PostgreSQL instance or mark validation unexecuted.
+PostgreSQL establishes reference locking/transaction/type behavior; H2 cannot establish those. M2 checks append locking, atomic rollback and column types on a real isolated instance. Restricted runtime grants and later scenario behaviors remain untested. The postgres-it profile fails rather than skips when disposable-database consent/configuration is absent; normal verify intentionally omits reference tests and must be described as unit/H2-only.
 
 Other gates:
 

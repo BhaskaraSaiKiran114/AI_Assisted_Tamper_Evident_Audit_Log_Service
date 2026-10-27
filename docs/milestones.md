@@ -1,11 +1,11 @@
 # Incremental implementation plan
 
-Eight milestones, executed in dependency order. The user authorized M1 on 2026-10-28 after the architecture proposal; M2-M8 are planned only. Authorization to build M1 is separate from human acceptance of its output.
+Eight milestones, executed in dependency order. The user authorized M1 and subsequently M2 on 2026-10-28; M3-M8 remain planned only. Authorization to implement is separate from human acceptance of the delivered output.
 
 | Milestone | Dependencies | Intent and scope | Completion evidence | Status |
 | --- | --- | --- | --- | --- |
 | M1 Foundation | Architecture proposal and user instruction | Governance, requirements, ambiguity record, ADRs, traceability, Java/Maven bootstrap, database profiles, migration and quality gates | Java 21 build, migration/health/deny-all smoke tests, documentation and explicit limits | Complete, 2026-10-28; human acceptance pending |
-| M2 Append-only ingestion | M1 | Exact canonicalization/golden vectors, protected payload representation, event schema, transaction lock, input validation | Required fields/bounds, stable hashes, genesis, rollback and concurrent append tests; no mutation API | Not started |
+| M2 Append-only ingestion | M1 | Exact canonicalization/golden vectors, protected payload representation, event schema, transaction lock, input validation | Required fields/bounds, stable hashes, genesis, rollback and concurrent append tests; no mutation API | Complete, 2026-10-28; 35 tests including 8 PostgreSQL tests; human acceptance pending |
 | M3 Query and verification | M2 | Combined filters/cursors, snapshot verification, first inconsistency taxonomy | Direct datastore tampering detected; pagination and archived-ready full traversal | Not started |
 | M4 Security and contract | M2-M3 | JWT validation, permissions, safe errors, protected OpenAPI/Swagger, database privileges | Token/authority matrix, valid role tests and contract examples | Not started |
 | M5 Retention and redaction | M2-M4 | Configurable archival, audited lifecycle actions and per-field key erasure | Eligibility, idempotency, intact chain, unreadable redacted values, permission/rollback tests | Not started |

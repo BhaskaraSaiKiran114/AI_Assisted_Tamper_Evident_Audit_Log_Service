@@ -1,6 +1,6 @@
 # ADR-003: Preserve chain material and redact through key erasure
 
-Date: 2026-10-28. Status: design baseline; protected envelope M2, lifecycle M5.
+Date: 2026-10-28. Status: protected envelope and wrapped-key persistence implemented M2; archival/redaction lifecycle remains M5. Master key stays outside PostgreSQL; H2 uses a disposable in-memory key. See `../encoding-v1.md`.
 
 Decision: archive through separate policy/audit metadata, retaining immutable records. Encrypt designated sensitive payload values before hashing using per-field keys/authenticated encryption. Hash ciphertext representation; remove the field key to redact and append a lifecycle event without changing chain bytes.
 

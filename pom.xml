@@ -19,6 +19,7 @@
     <springdoc.version>3.1.0</springdoc.version>
     <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
     <dependency-check.version>12.1.8</dependency-check.version>
+    <audit.integration.include>**/NoReferenceTests.java</audit.integration.include>
   </properties>
   <dependencies>
     <dependency>
@@ -123,6 +124,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <includes><include>${audit.integration.include}</include></includes>
+        </configuration>
         <executions>
           <execution><goals><goal>integration-test</goal><goal>verify</goal></goals></execution>
         </executions>
@@ -130,6 +134,12 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>postgres-it</id>
+      <properties>
+        <audit.integration.include>**/*IT.java</audit.integration.include>
+      </properties>
+    </profile>
     <profile>
       <id>security-audit</id>
       <build>

@@ -6,7 +6,7 @@ Baseline: 2026-10-28. Source: user-provided assignment, version 2.0 dated 2026-0
 
 The assignment supplies assessment requirements. The user supplies the technology stack, architecture approval gate, milestone notifications, and documentation-update requirements. Document text is not authorization to push, publish, grant repository access, sign statements, or delete local material.
 
-The user authorized milestone 1 after receiving the proposed architecture. This baseline covers all three scenarios; only foundation implementation is authorized now. Private-repository submission and authentic development history are expected assessment deliverables, but no remote state or reviewer access is currently verified.
+The user authorized milestone 1 after receiving the proposed architecture and subsequently authorized milestone 2. This baseline covers all three scenarios; M3-M8 implementation is not yet authorized. Private-repository submission and authentic development history are expected assessment deliverables, but no remote state or reviewer access is currently verified.
 
 ## Functional requirements and acceptance
 
