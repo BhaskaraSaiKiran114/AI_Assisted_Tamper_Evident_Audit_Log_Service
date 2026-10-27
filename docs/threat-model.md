@@ -6,10 +6,12 @@ Assume malicious requests, compromised producers, accidental/operator edits and 
 
 | Risk | Planned mitigation and validation | Residual limit / milestone |
 | --- | --- | --- |
-| Event edit/insertion/deletion/reorder | Canonical commitments, field/sequence/link/head checks; direct DB tests | Coherent rewrite needs independent checkpoint; M2/M3 |
+| Event edit/insertion/deletion/reorder | M3 implements canonical/field/sequence/link/head checks; direct DB tests passed on H2/PostgreSQL | Coherent rewrite still needs independent checkpoint |
 | Tail removal/whole DB rollback | Head comparison and signed external checkpoint | Same-store head can be rewritten; external operations incomplete in M1; M6/M8 |
 | Concurrent append forks/lost head | Row lock, atomic transaction, unique sequence, rollback tests | Global write bottleneck; M2 |
 | JSON/hash ambiguity | Versioned encoding/rejection rules/golden vectors/exact bytes | Independent verifier needs same encoding version; M2/M6 |
+| Read head/rows from different database states | M3 ReadSnapshot and latch-controlled concurrent append test; H2 SERIALIZABLE / PostgreSQL REPEATABLE_READ | Per-request snapshots do not freeze history across pagination requests |
+| Forged/drifting pagination | M3 HMAC-signed filters/limit/upper-head context, keyset ordering and anchor check | Default ephemeral key invalidates after restart; filtered pages do not prove completeness |
 | Unauthorized read/lifecycle action | JWT algorithm/signature/issuer/audience/time checks, authority matrix, DB roles | Compromised trusted issuer remains trusted; M4 |
 | Sensitive data exposed by hashes | Hash encrypted field representation, no plaintext digest, separate keys | Metadata/unencrypted fields remain; M2/M5 |
 | Redaction defeated by key copies | Key lifecycle, avoid logging, purge applicable copies | Backups/caches/prior exports limit erasure; M5 |

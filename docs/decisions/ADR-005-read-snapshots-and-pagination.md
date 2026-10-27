@@ -1,0 +1,13 @@
+# ADR-005: Database-specific read snapshots and signed keyset cursors
+
+Date: 2026-10-28. Status: M3 implementation refinement of the approved consistent-snapshot/query contract.
+
+Decision: parameterized conjunctive filters, occurrence-time [from,to), ascending sequence pages with fixed upper sequence/head hash and HMAC-signed versioned cursor. Bind filters and page size; reject altered/unavailable anchors. Optional externally configured signing key supports restarts/shared instances; default is ephemeral. Return original protected payload values only after row validation and authenticated key unwrapping. Missing keys are availability errors until M5 defines legitimate redaction.
+
+Verification walks all rows, not only rows <= recorded head, so underreported heads are detectable. Recompute committed bytes and compare query columns, links, continuity and final head. No key availability is needed for ciphertext-chain verification. Filtered queries are not whole-chain integrity proofs.
+
+The first H2 concurrency test failed: REPEATABLE_READ allowed an append committed after head observation to enter the scan. ReadSnapshot therefore selects PostgreSQL REPEATABLE_READ and H2 SERIALIZABLE using actual database metadata. Separate read-only transactions ensure callers cannot silently weaken isolation. Keep append transactions unchanged. This implements the original consistency intent rather than weakening tests or blocking all appends with a head lock. [H2's isolation documentation](https://h2database.com/html/advanced.html#transaction_isolation) explains the phantom distinction; [PostgreSQL 16](https://www.postgresql.org/docs/16/transaction-iso.html) documents its snapshot behavior.
+
+Alternatives: offsets drift under writes; an unsigned cursor permits changing the bound/filter context; deriving cursor keys from payload keys couples trust purposes; capturing only the head without a consistent scan causes false breaks; holding the head lock through full verification blocks ingestion; raising global transaction isolation changes append contention behavior.
+
+Consequences: stable append-only traversal with bounded pages, O(n) verification, no process-local append lock. Per-request snapshots do not freeze historical results across requests. Cursor key loss/rotation invalidates old cursors. Queries perform per-event key retrieval; performance/concurrency limits and final security remain later milestones. No cursor credential, external checkpoint, archival or regulatory-compliance claim is introduced.

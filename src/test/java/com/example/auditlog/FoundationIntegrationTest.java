@@ -45,6 +45,7 @@ class FoundationIntegrationTest {
     @Test
     void auditAndDocumentationAccessAreDeniedUntilSecurityMilestone() throws Exception {
         mvc.perform(get("/audit/events")).andExpect(status().isForbidden());
+        mvc.perform(get("/audit/verify")).andExpect(status().isForbidden());
         mvc.perform(post("/audit/events").contentType("application/json").content("{}"))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/v3/api-docs")).andExpect(status().isForbidden());

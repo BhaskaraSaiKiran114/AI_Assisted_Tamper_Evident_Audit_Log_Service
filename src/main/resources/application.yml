@@ -32,3 +32,5 @@ audit:
     master-key-base64: ${AUDIT_MASTER_KEY_BASE64:}
   payload:
     protected-paths: ${AUDIT_PROTECTED_PATHS:/accountNumber,/personalIdentifier}
+  query:
+    cursor-key-base64: ${AUDIT_CURSOR_KEY_BASE64:}

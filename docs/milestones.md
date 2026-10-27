@@ -1,12 +1,12 @@
 # Incremental implementation plan
 
-Eight milestones, executed in dependency order. The user authorized M1 and subsequently M2 on 2026-10-28; M3-M8 remain planned only. Authorization to implement is separate from human acceptance of the delivered output.
+Eight milestones, executed in dependency order. The user authorized M1, M2 and subsequently M3 on 2026-10-28; M4-M8 remain planned only. Authorization to implement is separate from human acceptance of the delivered output.
 
 | Milestone | Dependencies | Intent and scope | Completion evidence | Status |
 | --- | --- | --- | --- | --- |
 | M1 Foundation | Architecture proposal and user instruction | Governance, requirements, ambiguity record, ADRs, traceability, Java/Maven bootstrap, database profiles, migration and quality gates | Java 21 build, migration/health/deny-all smoke tests, documentation and explicit limits | Complete, 2026-10-28; human acceptance pending |
 | M2 Append-only ingestion | M1 | Exact canonicalization/golden vectors, protected payload representation, event schema, transaction lock, input validation | Required fields/bounds, stable hashes, genesis, rollback and concurrent append tests; no mutation API | Complete, 2026-10-28; 35 tests including 8 PostgreSQL tests; human acceptance pending |
-| M3 Query and verification | M2 | Combined filters/cursors, snapshot verification, first inconsistency taxonomy | Direct datastore tampering detected; pagination and archived-ready full traversal | Not started |
+| M3 Query and verification | M2 | Combined filters/cursors, snapshot verification, first inconsistency taxonomy | Direct datastore tampering detected; stable sparse pagination and unfiltered full traversal; archival behavior itself remains M5 | Complete, 2026-10-28; 71 tests including 24 PostgreSQL tests; human acceptance pending |
 | M4 Security and contract | M2-M3 | JWT validation, permissions, safe errors, protected OpenAPI/Swagger, database privileges | Token/authority matrix, valid role tests and contract examples | Not started |
 | M5 Retention and redaction | M2-M4 | Configurable archival, audited lifecycle actions and per-field key erasure | Eligibility, idempotency, intact chain, unreadable redacted values, permission/rollback tests | Not started |
 | M6 Verifiable export | M3-M5 | Filtered bundles, bridging headers, signed manifest and independent verifier | Verification without service; altered/missing/reordered content and wrong trust key rejected | Not started |

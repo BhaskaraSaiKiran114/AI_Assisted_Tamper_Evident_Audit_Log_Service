@@ -1,6 +1,6 @@
 # Architecture baseline
 
-Status: M1 baseline plus M2 ingestion implementation, authorized by the user on 2026-10-28. Ingestion, event/key schema and transactional chaining are implemented. Query/verification, JWT, lifecycle, export and reporting remain planned. Exact implemented encoding and key-management boundaries are in `encoding-v1.md` and M2 evidence.
+Status: M1-M3 implemented under separate user authorizations on 2026-10-28. Ingestion, event/key schema, transactional chaining, filtered reads, cursor pagination and full verification are implemented. JWT, lifecycle, export and reporting remain planned. See `encoding-v1.md`, `query-verification.md`, ADR-005 and milestone evidence for exact behavior and limits.
 
 ## Components and dependencies
 
@@ -50,9 +50,9 @@ Encryption must be stable at rest: randomized ciphertext is generated once at in
 
 ## Query and verification
 
-Queries use parameterized SQL, combined filters, bounded sequence cursors and a fixed upper-sequence snapshot marker. Time semantics are `[from,to)` on occurrence time. Default excludes archived entries; authorized opt-in includes them. Do not log payloads or tokens.
+Queries use parameterized SQL, combined filters, signed bounded sequence cursors and a fixed upper-sequence/head-hash marker. Time semantics are `[from,to)` on occurrence time. Returned protected values are restored only after row validation; missing keys are 503 until M5 defines legitimate redaction. M3 has no archived entries; default exclusion and authorized archive opt-in are M5 work. Do not log payloads or tokens.
 
-`GET /audit/verify` obtains a repeatable-read consistent snapshot of head and all events in sequence order. Recompute content hashes from stored canonical bytes, compare decoded fields with query columns, check sequence continuity, genesis, predecessor links, and final head. Return `intact`, `checkedCount`, snapshot head, and first inconsistency with sequence/event ID where available. Violation vocabulary will include CONTENT_HASH_MISMATCH, INDEX_FIELD_MISMATCH, PREVIOUS_HASH_MISMATCH, SEQUENCE_GAP, and HEAD_MISMATCH. For a missing record, report the expected missing sequence; there may be no surviving event ID.
+`GET /audit/verify` obtains a consistent snapshot of head and all events in sequence order. ReadSnapshot uses PostgreSQL REPEATABLE_READ and H2 SERIALIZABLE (H2 REPEATABLE_READ admitted phantom rows in the concurrency test). Separate read-only transactions preserve the guarantee even if a caller has weaker isolation; append isolation is unchanged. Recompute exact content hashes, compare query columns, then check sequence continuity, genesis, predecessor links and final head. Return `intact`, `checkedCount`, snapshot head and first inconsistency with sequence/event ID where available. Types include CONTENT_HASH_MISMATCH, INDEX_FIELD_MISMATCH, PREVIOUS_HASH_MISMATCH, SEQUENCE_GAP, HEAD_MISMATCH, MALFORMED_CONTENT and UNSUPPORTED_SCHEMA_VERSION. Missing records report expected sequence and null event ID. Operational failures return safe 503, not an integrity-success response.
 
 Archival never removes immutable evidence from full-chain traversal. Full verification is O(n); streaming and repeatable-read duration are explicit prototype limits. A timeout/error is not a successful integrity result. The first inconsistency is the first observed break, not proof of which record an attacker originally changed.
 
@@ -68,7 +68,9 @@ Bundle includes format/hash/canonicalization versions, filter, export time, snap
 
 This proves included content has not changed since export under the trusted signing key. Sparse proofs alone cannot prove the filter omitted no matching events, and an embedded public key alone is not a trust anchor. Recipient pins signing identity out of band. Decrypted sensitive values are excluded from baseline export. Key rotation, revocation, trusted external checkpoints, and archival-key availability must be documented and exercised within the chosen prototype boundary.
 
-## API and access policy (planned)
+## API and target access policy
+
+Write/read/verification adapters are implemented through M3; runtime business access stays denied until M4 installs the permissions below. Lifecycle/export/compliance routes remain planned.
 
 | Operation | Permission | Contract |
 | --- | --- | --- |

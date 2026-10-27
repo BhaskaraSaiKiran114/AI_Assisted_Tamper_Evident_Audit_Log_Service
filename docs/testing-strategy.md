@@ -2,19 +2,19 @@
 
 `./mvnw clean verify` (Windows `.\mvnw.cmd clean verify`) enforces Java 21, runs Checkstyle, compiles/tests and packages the Boot JAR. `FoundationIntegrationTest` starts H2/Flyway/Security and checks genesis initialization, minimal health and denied audit/docs access. It tests infrastructure, not future business behavior.
 
-Surefire runs `*Test`; normal verify runs 27 unit/H2 cases without Docker. The explicit postgres-it profile enables Failsafe `*IT` tests: 8 shared append-contract tests validated locally on PostgreSQL 16.3. Consent and an isolated audit_m2_test database are required. The Windows runner creates/stops a new cluster; CI is configured for a disposable PostgreSQL 17.6 service, whose external execution is not yet claimed. See M2 validation and README for commands.
+Surefire runs `*Test`; normal verify runs 47 unit/H2 cases without Docker. The explicit postgres-it profile enables Failsafe `*IT` tests: 8 append + 16 query/verification cases validated locally on PostgreSQL 16.3. Consent and an isolated audit_m2_test database are required. The Windows runner creates/stops a new cluster; CI is configured for a disposable PostgreSQL 17.6 service, whose external execution is not yet claimed. See M2/M3 validation and README for commands. The combined M3 gate passed 71 cases with no failures/errors/skips.
 
-| Milestone | Checks to add |
+| Milestone | Validation scope and progress |
 | --- | --- |
-| M2 | Canonical vectors, JSON/time/number rules, encryption representation, input bounds, links, parallel writes, rollback, no mutation APIs |
-| M3 | Filters/combinations/time edges, stable pages, empty chain, changed content/columns/links, missing record/head mismatch, concurrent snapshot traversal |
+| M2 | Implemented: canonical vectors, JSON/time/number rules, encryption, input bounds, links, parallel writes, rollback, no mutation APIs |
+| M3 | Implemented: filters/time edges, sparse stable pages, cursor signing/binding, empty chain, tampering/links/gaps/head/schema checks, concurrent snapshot traversal, safe error contracts |
 | M4 | Missing/wrong/expired/not-yet-valid JWT, issuer/audience/algorithm, positive/negative permissions, safe errors, protected OpenAPI, restricted DB grants |
 | M5 | Archive age/retries, intact archived chain, selective/repeated key erasure, denied operations, rollback and documented backup/export boundaries |
 | M6 | Offline verifier, sparse proof, corrupted/reordered/missing content, wrong key/signature/version, archived/redacted export |
 | M7 | Account-access vocabulary, permissions, account/actor/time/action/outcome filters, restricted fields and source completeness assumption |
 | M8 | PostgreSQL A/B/C walkthrough, SQL tamper demonstration, fresh setup, security scan, measured performance and live-change rehearsal |
 
-PostgreSQL establishes reference locking/transaction/type behavior; H2 cannot establish those. M2 checks append locking, atomic rollback and column types on a real isolated instance. Restricted runtime grants and later scenario behaviors remain untested. The postgres-it profile fails rather than skips when disposable-database consent/configuration is absent; normal verify intentionally omits reference tests and must be described as unit/H2-only.
+PostgreSQL establishes reference behavior; H2 success alone cannot establish it. M2 checks append locking/rollback/types and M3 checks filters/cursors, direct tampering and snapshots on the real isolated instance. The latch-controlled snapshot test exposed H2 REPEATABLE_READ phantoms; ReadSnapshot now uses H2 SERIALIZABLE and PostgreSQL REPEATABLE_READ in separate read-only transactions. Restricted runtime grants and later scenarios remain untested. The postgres-it profile fails rather than skips when consent/configuration is absent; normal verify intentionally omits reference tests and must be described as unit/H2-only.
 
 Other gates:
 
