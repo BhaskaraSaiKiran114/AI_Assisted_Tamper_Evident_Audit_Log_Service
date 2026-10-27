@@ -1,0 +1,13 @@
+target/
+.tools/
+.idea/
+*.iml
+.env
+.env.*
+!.env.example
+*.log
+data/
+secrets/
+exports/
+tmp/
+.DS_Store

@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: ${AUDIT_DB_URL:jdbc:postgresql://localhost:5432/auditlog}
+    username: ${AUDIT_DB_USERNAME:auditlog}
+    password: ${AUDIT_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
