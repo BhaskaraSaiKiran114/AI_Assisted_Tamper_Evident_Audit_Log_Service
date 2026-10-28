@@ -1,0 +1,22 @@
+{
+  "baseCommit": "97baea5e56c6daf179384b2115df6f4698d1d6da",
+  "dirty": true,
+  "scope": "Security audit report paths and failure diagnostics; no application behavior change",
+  "javaChecks": {
+    "tests": 152,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "workflowShellSimulations": 6,
+  "remoteCiRerun": null,
+  "scanPurpose": "Output-path smoke test using existing advisory cache; autoUpdate=false only locally, not CI",
+  "inputs": {
+    "pom.xml": "167d85e557f4ff9f4a23b34e2f3f05d4f49d14a92b20c3fa540b63579aff96bb",
+    ".github/workflows/verify.yml": "2d0e92b549a85c2125083c0dc989520d351966d474c8fdf73e272e5470fb0b7b"
+  },
+  "reports": {
+    "dependency-check-report.html": "ca2e69c65da6fcc294dcd8f1a1b830609e97d68ba47eca10b14dc77aedc9151d",
+    "dependency-check-report.json": "281007327244c14e217e57ef63a936372716bf170c77b95683e4c1dc0bd2d114"
+  }
+}

@@ -68,17 +68,48 @@ jobs:
           java-version: '21'
           cache: maven
       - name: Audit runtime dependencies (fail closed on feed errors)
+        id: audit
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: bash ./mvnw --batch-mode --no-transfer-progress -Psecurity-audit -DskipTests package dependency-check:check
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target/security-audit
+          bash ./mvnw --batch-mode --no-transfer-progress -Psecurity-audit -DskipTests package dependency-check:check 2>&1 | tee target/security-audit/maven.log
+      - name: Record security audit diagnostics
+        if: always()
+        env:
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target/security-audit
+          {
+            printf 'Maven audit step: %s\n' "$AUDIT_OUTCOME"
+            for report in dependency-check-report.html dependency-check-report.json; do
+              if test -s "target/security-audit/$report"; then
+                printf 'Report present: %s\n' "$report"
+              else
+                printf 'Report missing: %s (inspect the Maven audit log)\n' "$report"
+              fi
+            done
+          } | tee target/security-audit/status.txt
+          cat target/security-audit/status.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Require complete security reports after a successful scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          for report in dependency-check-report.html dependency-check-report.json; do
+            if ! test -s "target/security-audit/$report"; then
+              printf '::error::Successful audit did not produce %s\n' "$report"
+              exit 1
+            fi
+          done
       - name: Publish dependency audit
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: security-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: error
-          include-hidden-files: true
           retention-days: 30
-          path: |
-            .tools/security-report/dependency-check-report.html
-            .tools/security-report/dependency-check-report.json
+          path: target/security-audit/

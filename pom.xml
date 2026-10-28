@@ -31,6 +31,7 @@
     <audit.integration.include>**/VerifierArtifactIT.java</audit.integration.include>
     <audit.readiness.include>**/NoReadinessExercise.java</audit.readiness.include>
     <audit.security.data-directory>${project.basedir}/.tools/dependency-check-v13</audit.security.data-directory>
+    <audit.security.report-directory>${project.build.directory}/security-audit</audit.security.report-directory>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -235,7 +236,7 @@
               <failBuildOnCVSS>7</failBuildOnCVSS>
               <failOnError>true</failOnError>
               <dataDirectory>${audit.security.data-directory}</dataDirectory>
-              <outputDirectory>${project.basedir}/.tools/security-report</outputDirectory>
+              <outputDirectory>${audit.security.report-directory}</outputDirectory>
               <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
               <formats><format>HTML</format><format>JSON</format></formats>
             </configuration>

@@ -37,3 +37,5 @@ All eight engineering deliverables delivered: final readiness 210 checks (132 Su
 | ATT-01/02/05 | Candidate identity retained; repository/branch/base revision, exact input manifest/report hashes and actual CI URL when available | Uncommitted sources labelled dirty; final human-reviewed revision/affirmation and external submission remain pending |
 
 Final local follow-up passed 238 Java checks plus six Python evidence-gate cases, with bundle line/branch/method coverage 94.46%/79.92%/96.35% and all gates met. Executed results and failures are in [follow-up evidence](validation/functional-gap-remediation.md); original M1-M8 counts remain historical.
+
+CI-01 artifact follow-up: non-hidden configurable report output, retained Maven log/outcome diagnostics on failure, mandatory nonempty HTML/JSON after success and directory upload are validated in [security audit artifacts](validation/security-audit-artifacts.md). Local output-path smoke evidence uses an existing advisory cache; it does not replace fresh advisory data or a successful remote run. Earlier input manifests remain historical and were not rewritten for this fix.

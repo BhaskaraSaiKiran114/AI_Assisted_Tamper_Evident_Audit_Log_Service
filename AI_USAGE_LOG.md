@@ -163,3 +163,11 @@ Record date, human task, intent, constraints, acceptance criteria, context, AI/t
 - Human request: describe the approved changes as addressing functional gaps.
 - Edited: follow-up document/manifest filenames and all documentation links/headings/context to use functional-gap terminology. Validation JSON contents, tested input digests and implementation remain unchanged.
 - Validation: searched repository text for obsolete terminology, checked local documentation links/whitespace and verified retained manifest/report digests. No application/build changes; Java tests were not rerun for this documentation-only update.
+
+## AI-013 - security audit artifact failure diagnostics (2026-10-28)
+
+- Human context: user pasted a missing-report upload error and identified the failing push job. Earlier Maven logs were requested but not supplied; the scanner's original failure remains undiagnosed from that evidence alone.
+- Edited: configurable non-hidden target/security-audit output, captured Maven log with pipefail, always-run outcome/report-presence diagnostics, strict successful-scan report checks and directory artifact upload; security review/traceability/attestation and targeted validation ledger updated.
+- Rejected: ignoring the missing report to create a green job, continue-on-error, weakening CVSS/error gates, inventing NVD/feed causality, disabling TLS, or describing cached analysis as current feed evidence. CI auto-updates remain enabled.
+- Actual checks: parsed workflow and executed six failure/success shell simulations using its extracted run blocks; isolated Java 21 clean verify passed 152 checks with zero failures/errors/skips/style violations and coverage gates met; real report-generation smoke test produced HTML/JSON with the existing cache (local autoUpdate=false only). Tested input and report hashes retained in docs/validation/security-audit-artifacts.json. No remote rerun or PostgreSQL rerun claimed.
+- Human ownership: changes are uncommitted at delivery; no push, submission, candidate signature or acceptance fabricated. The running local service remains unchanged. See docs/validation/security-audit-artifacts.md for actual results and follow-up diagnosis.

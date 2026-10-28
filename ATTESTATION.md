@@ -47,3 +47,7 @@ AI assistance is recorded in `AI_USAGE_LOG.md`. Git identity configuration is no
 ## Approved gap remediation progress - 2026-10-28
 
 User explicitly instructed "implement the changes" after the proposed four priority fixes. Scope: issuer-assigned resource authorization and negative contracts, measured JaCoCo gates, reference/readiness/security CI evidence, and revision-linked documentation. Final clean Java 21/PostgreSQL/readiness verification passed 238 checks, zero failures/errors/skips/style violations; Historical milestone statements remain attached to their original delivery evidence. Candidate identity/date were already supplied; this implementation does not sign the statement or attest to machine/account ownership, repository privacy, reviewer access or submission. Final output acceptance remains pending human review.
+
+## Security audit artifact follow-up - 2026-10-28
+
+User reported missing CI security reports. Maven output and CI diagnostics/upload handling were corrected without weakening the audit gates. Isolated clean verify passed 152 checks; six workflow shell simulations passed; a cached report-generation smoke test produced both formats. See docs/validation/security-audit-artifacts.md and its input/report digests. Original remote scanner error and next remote run remain unverified; this record is not personal affirmation or submission approval.
