@@ -69,13 +69,14 @@ jobs:
           cache: maven
       - name: Audit runtime dependencies (fail closed on feed errors)
         id: audit
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p target/security-audit
-          bash ./mvnw --batch-mode --no-transfer-progress -Psecurity-audit -DskipTests package dependency-check:check 2>&1 | tee target/security-audit/maven.log
+          bash ./mvnw --batch-mode --no-transfer-progress \
+            -Psecurity-audit -DskipTests \
+            '-DnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz' \
+            package dependency-check:check 2>&1 | tee target/security-audit/maven.log
       - name: Record security audit diagnostics
         if: always()
         env:

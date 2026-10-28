@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-28",
+  "baseCommit": "03bff5c857facbde579a0de10ea525e3e7b0c9ef",
+  "dirty": true,
+  "feedUrl": "https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz",
+  "apiKeySet": false,
+  "coldCache": true,
+  "automaticFeedUpdates": true,
+  "engineVersion": "13.0.0",
+  "dataSources": [
+    {
+      "name": "NVD API Last Checked",
+      "timestamp": "2026-10-28T18:24:37Z"
+    },
+    {
+      "name": "NVD API Last Modified",
+      "timestamp": "2026-10-28T16:57:05Z"
+    },
+    {
+      "name": "NVD Cache Last Checked",
+      "timestamp": "2026-10-28T18:24:37Z"
+    },
+    {
+      "name": "NVD Cache Last Modified",
+      "timestamp": "2026-10-28T16:57:05Z"
+    }
+  ],
+  "dependencyRecords": 59,
+  "vulnerableDependencyRecords": 0,
+  "scanResult": "BUILD SUCCESS; CVSS >=7 and failOnError=true unchanged",
+  "coverageLimit": "Compile/runtime default scan; NVD, RetireJS and CISA analyzers; OSS Index disabled automatically without its own credentials. Not an all-dependencies-safe certification.",
+  "javaChecks": {
+    "tests": 152,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "workflowShellSimulations": 6,
+  "remoteCiRerun": null,
+  "workflowSha256": "1206e9038c18c34031680b13ef8574c3dd05b85ab36b7d4c9e2c3f443a646c12",
+  "reports": {
+    "dependency-check-report.html": "fb54c93520fbd949a3028e1bc6d6bab652cbeb2e80aa678461e9d5816cca324c",
+    "dependency-check-report.json": "bb6585d24e779da6a6856376e77c3756f6234ff520616ee9e6f7279b79796192"
+  }
+}

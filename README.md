@@ -91,11 +91,11 @@ Verification traverses all stored records and reports intact, checkedCount, snap
 Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M8 passed all 210 opt-in readiness cases (132 unit/H2, 74 PostgreSQL, one offline CLI and three readiness cases), including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
 
 ```powershell
-.\mvnw.cmd -Psecurity-audit verify
+.\mvnw.cmd -Psecurity-audit verify '-DnvdDatafeedUrl=https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz'
 git diff --check
 ```
 
-Opt-in security-audit uses current vulnerability data and fails on CVSS >=7. NVD_API_KEY can improve retrieval; never commit it. Normal verify is not a vulnerability scan. PostgreSQL/scenario/performance validation is tracked separately.
+Opt-in security-audit fails on CVSS >=7 and on scanner/feed errors. CI and the command above use Dependency-Check's public NVD-data mirror; no NVD_API_KEY secret is needed. Feed updates remain enabled. The mirror is updated on a best-effort basis and can lag NVD, so report timestamps constrain freshness. Running the profile without the mirror argument uses the NVD API and may require a properly configured key. Normal verify is not a vulnerability scan. PostgreSQL/scenario/performance validation is tracked separately.
 
 If enterprise TLS inspection requires Windows certificate trust, configure your organizational CA or, when appropriate for the shell:
 

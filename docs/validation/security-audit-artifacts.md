@@ -22,3 +22,7 @@
 Commit/push the reviewed fix and rerun Verify. In security-audit, open the Audit runtime dependencies step or download the security artifact and inspect maven.log. status.txt/job summary show whether report generation completed. If the scan fails, address its first Maven/scanner error; an absent report alone does not identify a network, credentials, feed, dependency or compilation problem. Do not mark the audit passed simply because diagnostics uploaded. NVD_API_KEY may be configured as a repository Actions secret where appropriate; never paste it into logs or repository files.
 
 Sources: [Dependency-Check output/configuration contract](https://dependency-check.github.io/DependencyCheck/dependency-check-maven/check-mojo.html), [GitHub artifact missing-file behavior](https://github.com/actions/upload-artifact#customization-if-no-files-are-found).
+
+## Subsequent root-cause evidence and keyless configuration
+
+A later user-supplied Maven trace identified an empty API key and an empty NVD database as the remote cause. The subsequent [no-key security-audit change](no-key-security-audit.md) uses the maintained public NVD mirror in CI, without a repository API-key secret. The earlier report-path validation above remains historical; the diagnostic/report checks are retained.

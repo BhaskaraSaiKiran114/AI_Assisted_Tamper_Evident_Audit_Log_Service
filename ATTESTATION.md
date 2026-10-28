@@ -51,3 +51,7 @@ User explicitly instructed "implement the changes" after the proposed four prior
 ## Security audit artifact follow-up - 2026-10-28
 
 User reported missing CI security reports. Maven output and CI diagnostics/upload handling were corrected without weakening the audit gates. Isolated clean verify passed 152 checks; six workflow shell simulations passed; a cached report-generation smoke test produced both formats. See docs/validation/security-audit-artifacts.md and its input/report digests. Original remote scanner error and next remote run remain unverified; this record is not personal affirmation or submission approval.
+
+## Security audit without an API-key prerequisite - 2026-10-28
+
+User requested a solution without obtaining an NVD key. CI now uses Dependency-Check's maintained public NVD-data mirror; the audit remains mandatory and default feed/error checks stay enabled. Java 21 clean verify passed 152 checks; six synthetic workflow cases passed. Real cold-cache mirror execution passed without an API key, with feed updates enabled and both reports generated (59 dependency records, zero reported vulnerable records within documented analyzer/data scope). Source timestamps and limits are recorded separately in docs/validation/no-key-security-audit.md. No application data, deployment, personal signature or acceptance was changed.

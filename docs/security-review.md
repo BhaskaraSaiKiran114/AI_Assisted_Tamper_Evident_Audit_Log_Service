@@ -59,3 +59,11 @@ Measured JaCoCo gates and revision/input-bound artifacts supplement the earlier 
 ## Security audit artifact failure follow-up
 
 Current CI retains Maven logs and report-presence diagnostics under target/security-audit even when scanning fails. Successful scans must produce both nonempty report formats; underlying Maven/CVSS/feed failures remain failures. See [artifact validation](validation/security-audit-artifacts.md). The old .tools/security-report paths above describe the historical M8 scan. The new local output-path smoke test used the existing cache and is not fresh advisory evidence or remote CI success.
+
+## CI without an NVD API key
+
+The reported remote root error was `Invalid API Key, length of 0`, followed by an empty vulnerability database. CI now explicitly sets nvdDatafeedUrl to Dependency-Check's maintained public NVD JSON 2.0 mirror and removes the NVD_API_KEY secret binding. This switches the scanner's retrieval mode to public data feeds. Application code, dependency versions, CVSS >=7 and failOnError=true are unchanged. The existing report/log/status checks remain mandatory.
+
+The mirror is built from the NVD API and updated every 24 hours on a best-effort basis; upstream outages can leave it stale, and initial full-feed downloads are larger than API deltas. This removes the candidate API-key requirement, not the need for vulnerability data or network availability. Inspect actual report data-source timestamps; no new freshness SLA or security certification is claimed. Local direct-API users can still configure a key or pass the documented mirror argument.
+
+Source: [Dependency-Check maintained mirror documentation](https://dependency-check.github.io/DependencyCheck/data/mirrornvd.html). Execution evidence is in [no-key audit validation](validation/no-key-security-audit.md).
