@@ -14,9 +14,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfiguration {
 
+    private static final String[] DOCUMENTATION = {"/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/**",
+        "/swagger-ui.html", "/swagger-ui/**"};
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder decoder,
-            JwtAuthenticationConverter converter, SecurityProblems problems) throws Exception {
+            JwtAuthenticationConverter converter, SecurityProblems problems, LocalSwaggerAccess localSwagger) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -24,7 +27,13 @@ public class SecurityConfiguration {
                 .logout(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(requests -> requests
+                .authorizeHttpRequests(requests -> {
+                    if (localSwagger.enabled()) {
+                        requests.requestMatchers(HttpMethod.GET, DOCUMENTATION).permitAll();
+                    } else {
+                        requests.requestMatchers(HttpMethod.GET, DOCUMENTATION).hasAuthority("AUDIT_DOCS");
+                    }
+                    requests
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/audit/events").hasAuthority("AUDIT_WRITE")
                         .requestMatchers(HttpMethod.POST, "/audit/retention/runs", "/audit/events/*/redactions")
@@ -33,9 +42,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/audit/verify").hasAuthority("AUDIT_VERIFY")
                         .requestMatchers(HttpMethod.GET, "/audit/exports").hasAuthority("AUDIT_EXPORT")
                         .requestMatchers(HttpMethod.GET, "/audit/compliance/access-report").hasAuthority("AUDIT_COMPLIANCE")
-                        .requestMatchers(HttpMethod.GET, "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/**",
-                                "/swagger-ui.html", "/swagger-ui/**").hasAuthority("AUDIT_DOCS")
-                        .anyRequest().denyAll())
+                        .anyRequest().denyAll();
+                })
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(problems).accessDeniedHandler(problems))
                 .oauth2ResourceServer(resource -> resource.jwt(jwt -> jwt.decoder(decoder)
                                 .jwtAuthenticationConverter(converter))

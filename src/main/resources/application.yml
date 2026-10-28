@@ -33,6 +33,8 @@ springdoc:
     disable-swagger-default-url: true
   paths-to-match: /audit/**
 audit:
+  swagger:
+    local-public: ${AUDIT_SWAGGER_LOCAL_PUBLIC:false}
   report:
     max-window: ${AUDIT_REPORT_MAX_WINDOW:P31D}
     max-scanned: ${AUDIT_REPORT_MAX_SCANNED:1000}

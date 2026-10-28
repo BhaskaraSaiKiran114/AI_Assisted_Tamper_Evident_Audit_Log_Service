@@ -2,7 +2,7 @@
 
 `./mvnw clean verify` (Windows `.\mvnw.cmd clean verify`) enforces Java 21, runs Checkstyle, compiles/tests and packages the Boot JAR. `FoundationIntegrationTest` starts H2/Flyway/Security and checks genesis initialization, minimal health and denied audit/docs access. It tests infrastructure, not future business behavior.
 
-Surefire runs *Test; normal verify runs 132 unit/H2/security cases and one offline-verifier Failsafe case after packaging. Explicit postgres-it runs 75 Failsafe cases: the same offline test and 74 PostgreSQL cases (8 append, 16 read/verify, 13 lifecycle, 11 export, 12 report, 14 actual restricted-pool API/privilege cases), validated locally on PostgreSQL 16.3. Both disposable-database and cluster-role consent flags plus a fresh audit_m2_test database/cluster are mandatory. The Windows runner creates/stops its own cluster; CI's 17.6 service is configured, not externally executed. The M8 opt-in readiness gate passed 210 cases (the 207 regular cases plus three real HTTP/readiness exercises) with no failures/errors/skips.
+Surefire runs *Test; normal verify now runs 138 unit/H2/security cases and one offline-verifier Failsafe case after packaging. Explicit postgres-it runs 75 Failsafe cases: the same offline test and 74 PostgreSQL cases (8 append, 16 read/verify, 13 lifecycle, 11 export, 12 report, 14 actual restricted-pool API/privilege cases), validated locally on PostgreSQL 16.3. Both disposable-database and cluster-role consent flags plus a fresh audit_m2_test database/cluster are mandatory. The Windows runner creates/stops its own cluster; CI's 17.6 service is configured, not externally executed. The M8 opt-in readiness gate passed 210 cases (the 207 regular cases plus three real HTTP/readiness exercises) with no failures/errors/skips.
 
 | Milestone | Validation scope and progress |
 | --- | --- |
@@ -26,3 +26,5 @@ Other gates:
 Evidence files record actual commands, environment, counts/results, failures/repairs and limits. A configured CI workflow is not an executed CI run. Keep raw build logs under ignored target/ and summarize without secrets.
 
 For the complete local readiness suite use scripts/verify-postgres.ps1 -Readiness or -Ppostgres-it,readiness with the same guarded disposable setup. scripts/check-deliverables.py provides optional Python 3 hygiene; it prints locations, never secret matches. Final metrics, advisory scope, failures/repairs, data freshness and artifact fingerprints are in the M8 ledger. A dependency audit is not a functional test, an incomplete import is not a clean scan, and repeated executions must not inflate unique test counts.
+
+The local Swagger follow-up added four guard and two H2 HTTP cases. Its isolated normal clean verify passed 139; the earlier M8 210-case full readiness evidence is historical and was not re-executed for that follow-up. See validation/local-swagger.md.

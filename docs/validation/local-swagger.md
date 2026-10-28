@@ -1,0 +1,11 @@
+# Local Swagger usability follow-up
+
+2026-10-28. User selected the previously prepared opt-in H2/localhost proposal and requested the link. No personal sign-off or production-public documentation approval is inferred.
+
+AUDIT_SWAGGER_LOCAL_PUBLIC defaults false. Explicit true exposes GET documentation resources only when server.address=127.0.0.1, no postgres profile is active and the actual JDBC product is H2. Startup rejects other combinations. Business APIs retain their exact JWT permissions; default docs retain AUDIT_DOCS. No cookie/token endpoint, query-string token, mutation or persistence-format change.
+
+The original root clean could not delete the JAR locked by the user's running service. Instead, current tracked/non-ignored source was copied into .tools/local-swagger-work and verified using the existing absolute Maven cache/JDK21. A sandbox-denied log write was retried with environment approval. Offline clean verify passed at 16:29:12 +05:30 in 34.760 seconds: 138 Surefire plus one offline verifier test, zero failures/errors/skips, zero Checkstyle violations. This includes four startup-guard tests, two local-mode HTTP cases and all existing default-protection cases. The main project's old service/JAR was not stopped or replaced. PostgreSQL was not re-executed for this H2-only follow-up.
+
+A separate hidden Java process was started from the tested isolated artifact with explicit H2 URLs, loopback bind, local flag and port 8081. It uses the existing .tools/jwt public verification key and a new empty in-memory store. Live native checks: health 200, Swagger HTML 200, OpenAPI 200 and anonymous /audit/events 401. Swagger URL: http://127.0.0.1:8081/swagger-ui/index.html. A fresh matching JWT is still needed in Authorize for business calls; the user's previously pasted token was expired and is not copied into project records.
+
+The running instance is intentional for user testing. Its PID, port and creation time are in ignored .tools/local-swagger-instance.json, with separate ignored server/error logs. Existing port 8080 service/data were left unchanged. H2 data disappears when its process stops. Documentation mode is local-only and default-off; it does not change the eight-milestone historical evidence, external submission state or unsigned candidate fields.
