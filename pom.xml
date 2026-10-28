@@ -19,7 +19,7 @@
     <springdoc.version>3.1.0</springdoc.version>
     <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
     <dependency-check.version>12.1.8</dependency-check.version>
-    <audit.integration.include>**/NoReferenceTests.java</audit.integration.include>
+    <audit.integration.include>**/VerifierArtifactIT.java</audit.integration.include>
   </properties>
   <dependencies>
     <dependency>
@@ -84,6 +84,22 @@
   </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>independent-verifier</id>
+            <phase>package</phase>
+            <goals><goal>jar</goal></goals>
+            <configuration>
+              <classifier>verifier</classifier>
+              <includes><include>com/example/auditlog/export/ExportBundle*.class</include></includes>
+              <archive><manifest><mainClass>com.example.auditlog.export.ExportBundle</mainClass></manifest></archive>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

@@ -74,4 +74,4 @@ Erasure removes a wrapped field key from the active transactional store. WAL, ba
 
 Reads/verifications begun before lifecycle commit may finish against their earlier snapshot. Erasure does not retract plaintext already delivered or held in memory. Archival retains storage. Per-query proof validation may repeat across targets; large batches/pages require M8 measurement/tuning. Full verification adds metadata/target checks; transaction timeouts are not CPU/wall-clock SLAs.
 
-No automatic scheduler, legal hold, tenant policy, key recovery/rotation, production KMS, physical purge or export is added. All implementation validation uses synthetic data in isolated databases; existing services and meaningful data are untouched. M6-M8 remain separate.
+No automatic scheduler, legal hold, tenant policy, key recovery/rotation, production KMS, physical purge is added by M5. M6 separately adds bounded ciphertext-only export (see exports.md). All implementation validation uses synthetic data in isolated databases; existing services and meaningful data are untouched. M7-M8 remain separate; M6 export preserves the privacy limits above.

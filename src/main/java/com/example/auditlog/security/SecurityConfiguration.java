@@ -31,6 +31,7 @@ public class SecurityConfiguration {
                                 .hasAuthority("AUDIT_LIFECYCLE")
                         .requestMatchers(HttpMethod.GET, "/audit/events", "/audit/events/*").hasAuthority("AUDIT_READ")
                         .requestMatchers(HttpMethod.GET, "/audit/verify").hasAuthority("AUDIT_VERIFY")
+                        .requestMatchers(HttpMethod.GET, "/audit/exports").hasAuthority("AUDIT_EXPORT")
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/**",
                                 "/swagger-ui.html", "/swagger-ui/**").hasAuthority("AUDIT_DOCS")
                         .anyRequest().denyAll())

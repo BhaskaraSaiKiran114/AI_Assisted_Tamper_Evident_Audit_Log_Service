@@ -1,6 +1,6 @@
 # Tamper-Evident Audit Log Service
 
-Engineer-led Java prototype. **Milestones 1-5 complete (5/8, 62.5%).** Ingestion, protected payloads, atomic hash-chain append, filtered reads/pagination, verification, JWT permissions, protected OpenAPI/Swagger and restricted PostgreSQL runtime credentials are implemented. Audited retention and selective field-key erasure are implemented; export and compliance remain planned.
+Engineer-led Java prototype. **Milestones 1-6 complete (6/8, 75%).** Ingestion, protected payloads, atomic hash-chain append, filtered reads/pagination, verification, JWT permissions, protected OpenAPI/Swagger and restricted PostgreSQL runtime credentials are implemented. Audited retention and selective field-key erasure are implemented; signed export and an independent verifier are implemented; compliance remains planned.
 
 ## Engineering baseline
 
@@ -68,7 +68,7 @@ Generate the payload master key once (for example `[Convert]::ToBase64String([Se
 
 ## Reference-database verification
 
-Normal verify runs 85 unit/H2/security tests. postgres-it adds 41 reference cases (8 append, 16 read/verify, 13 lifecycle, 4 real runtime-role cases). It requires a fresh disposable cluster/database audit_m2_test, administrator AUDIT_TEST_DB_URL/USERNAME/PASSWORD, AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes. Tests create cluster-wide roles, clear/corrupt fixture data and verify denied mutations. Existing role names or missing consent cause refusal. Never target a shared server or useful data; the runner sets consent only for its new cluster.
+Normal verify runs 110 unit/H2/security tests plus one packaged offline-verifier integration test. postgres-it runs 58 Failsafe cases: 57 PostgreSQL cases (8 append, 16 read/verify, 13 lifecycle, 11 export, 9 real runtime-role cases) plus the same one offline-verifier case. It requires a fresh disposable cluster/database audit_m2_test, administrator AUDIT_TEST_DB_URL/USERNAME/PASSWORD, AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes. Tests create cluster-wide roles, clear/corrupt fixture data and verify denied mutations. Existing role names or missing consent cause refusal. Never target a shared server or useful data; the runner sets consent only for its new cluster.
 
 Windows with installed PostgreSQL binaries can create, test and stop a separate temporary cluster without Docker or using an existing service:
 
@@ -88,7 +88,7 @@ Verification traverses all stored records and reports intact, checkedCount, snap
 
 ## Quality gates
 
-Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M5 passed all 126 cases, including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
+Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M6 passed all 168 combined cases, including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
 
 ```powershell
 .\mvnw.cmd -Psecurity-audit verify
@@ -114,3 +114,9 @@ The candidate reviews outputs, completes their own attestation, and maintains ge
 See the [lifecycle contract](docs/lifecycle.md), [capability decision](docs/decisions/ADR-007-audited-lifecycle-capabilities.md) and [M5 evidence](docs/validation/milestone-5.md) for exact commands. POST /audit/retention/runs and POST /audit/events/{eventId}/redactions require AUDIT_LIFECYCLE. Commands require operationId/reason; erasure additionally requires paths, approvalReference and confirmation=ERASE_FIELD_KEYS. Exact retries return the original receipt; changed intent with the same ID is 409. Approval references are operator assertions, not externally validated approval.
 
 Retention defaults to P90D, policy v1 and batches of 100; set AUDIT_RETENTION_WINDOW, AUDIT_RETENTION_POLICY_VERSION and AUDIT_RETENTION_BATCH_SIZE as shell variables. Archived records are hidden by default; includeArchived=true requires both READ and LIFECYCLE permissions. Cursor v2 binds archive mode and rejects v1 cursors. Existing reserved namespace collisions need upgrade review. Keys are removed only from the active transactional store: backups, WAL, replicas, earlier snapshots/in-flight reads and previously delivered values limit erasure. No physical purge, automatic scheduler or compliance certification is claimed.
+
+## Signed export and independent verifier (M6)
+
+See the [export contract/setup](docs/exports.md), [format decision](docs/decisions/ADR-008-bounded-independent-exports.md) and [M6 evidence](docs/validation/milestone-6.md). GET /audit/exports?actorId=synthetic-actor (or resourceId) requires AUDIT_EXPORT. Archive opt-in additionally needs LIFECYCLE. Configure a separate AUDIT_EXPORT_PRIVATE_KEY_BASE64; blank means exports return 503. Selected original protected bytes, minimal bridging headers and signed manifest form a bounded ZIP; no field keys or decrypted protected values are included.
+
+Normal package also creates target/audit-log-service-0.1.0-SNAPSHOT-verifier.jar. Run it with Java 21, a bundle path and a separately trusted Base64 SPKI public-key file. The tool needs no service, database, Maven or third-party libraries; normal clean verify executes the packaged tool. Defaults cap whole-chain headers at 10000, selected events at 1000, body at 16 MiB and concurrent exports at two. Limits fail without partial output. Signed hidden-content headers/status do not prove filter completeness, upstream truth or physical erasure. M7-M8 have not started.

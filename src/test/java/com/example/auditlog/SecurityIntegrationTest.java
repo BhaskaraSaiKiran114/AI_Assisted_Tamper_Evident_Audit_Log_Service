@@ -229,7 +229,9 @@ class SecurityIntegrationTest {
         mvc.perform(delete("/audit/events").header("Authorization", token)).andExpect(status().isForbidden());
         mvc.perform(post("/audit/retention/runs").header("Authorization", token).contentType("application/json").content("{}"))
                 .andExpect(status().isBadRequest());
-        mvc.perform(get("/audit/exports").header("Authorization", token)).andExpect(status().isForbidden());
+        mvc.perform(get("/audit/exports").header("Authorization", token)).andExpect(status().isBadRequest());
+        mvc.perform(get("/audit/exports").param("actorId", "synthetic").header("Authorization", token))
+                .andExpect(status().isServiceUnavailable()); // No configured export signing key in this context.
         mvc.perform(get("/actuator/env").header("Authorization", token)).andExpect(status().isForbidden());
         mvc.perform(get("/actuator/health")).andExpect(status().isOk());
     }

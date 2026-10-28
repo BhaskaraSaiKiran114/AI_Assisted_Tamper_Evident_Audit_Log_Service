@@ -44,18 +44,22 @@ public class OpenApiConfiguration {
             String permission = Map.of("POST /audit/events", "AUDIT_WRITE", "GET /audit/events", "AUDIT_READ",
                     "GET /audit/events/{eventId}", "AUDIT_READ", "GET /audit/verify", "AUDIT_VERIFY",
                     "POST /audit/retention/runs", "AUDIT_LIFECYCLE",
+                    "GET /audit/exports", "AUDIT_EXPORT",
                     "POST /audit/events/{eventId}/redactions", "AUDIT_LIFECYCLE")
                     .get(method.name() + " " + path);
             if (permission == null) {
                 throw new IllegalStateException("New API operations need an explicit documented permission");
             }
             operation.addExtension("x-required-permission", permission);
-            if (method.name().equals("GET") && path.startsWith("/audit/events")) {
+            if (method.name().equals("GET") && (path.startsWith("/audit/events") || path.equals("/audit/exports"))) {
                 operation.addExtension("x-include-archived-permission", "AUDIT_LIFECYCLE");
             }
             var errors = new java.util.LinkedHashMap<>(Map.of("400", "Invalid request", "401", "Invalid or absent bearer token",
                     "403", "Missing permission", "503", "Execution, integrity or key availability failure"));
-            if (permission.equals("AUDIT_LIFECYCLE")) {
+            if (permission.equals("AUDIT_EXPORT")) {
+                errors.put("413", "Export exceeds proof, selection or byte limit");
+                errors.put("429", "Export capacity exhausted");
+            } else if (permission.equals("AUDIT_LIFECYCLE")) {
                 errors.put("409", "Operation ID conflicts with another request");
                 errors.put("413", "Lifecycle request exceeds 16 KiB");
                 if (path.endsWith("/redactions")) {

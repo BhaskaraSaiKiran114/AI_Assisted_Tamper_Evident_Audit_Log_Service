@@ -1,6 +1,6 @@
-# Security and API contract - milestones 4-5
+# Security and API contract - milestones 4-6
 
-M4 enables the implemented write/read/verification APIs through stateless JWT authentication. Health remains public. M5 enables lifecycle commands with AUDIT_LIFECYCLE; export and compliance endpoints remain denied.
+M4 enables the implemented write/read/verification APIs through stateless JWT authentication. Health remains public. M5 enables lifecycle commands with AUDIT_LIFECYCLE; M6 enables export with AUDIT_EXPORT; compliance remains denied.
 
 ## JWT trust contract
 
@@ -21,13 +21,14 @@ The application holds only the verification public key. The local developer help
 | POST /audit/events | AUDIT_WRITE |
 | GET /audit/events, GET /audit/events/{eventId} | AUDIT_READ |
 | GET /audit/verify | AUDIT_VERIFY |
+| GET /audit/exports | AUDIT_EXPORT; add AUDIT_LIFECYCLE for includeArchived=true |
 | POST /audit/retention/runs, POST /audit/events/{eventId}/redactions | AUDIT_LIFECYCLE |
 | GET event list/lookup with includeArchived=true | AUDIT_READ and AUDIT_LIFECYCLE |
 | GET /v3/api-docs, /v3/api-docs.yaml, /v3/api-docs/** | AUDIT_DOCS |
 | GET /swagger-ui.html, /swagger-ui/** including assets | AUDIT_DOCS |
 | Any unlisted method/path | Denied |
 
-Permissions have no implicit hierarchy. AUDIT_DOCS does not read event payloads; AUDIT_READ does not append or verify. AUDIT_LIFECYCLE permits the two implemented POST lifecycle routes. Archived read opt-in requires AUDIT_READ plus AUDIT_LIFECYCLE. Recognizing AUDIT_EXPORT/AUDIT_COMPLIANCE claims does not enable their unimplemented endpoints. PUT/PATCH/DELETE are not event APIs and remain denied even with every permission.
+Permissions have no implicit hierarchy. AUDIT_DOCS does not read event payloads; AUDIT_READ does not append or verify. AUDIT_LIFECYCLE permits the two implemented POST lifecycle routes. Archived read opt-in requires AUDIT_READ plus AUDIT_LIFECYCLE. AUDIT_EXPORT permits bounded protected export without granting ordinary payload decryption. Archive export opt-in requires EXPORT plus LIFECYCLE. AUDIT_COMPLIANCE does not enable its unimplemented endpoint. PUT/PATCH/DELETE are not event APIs and remain denied even with every permission.
 
 This is a single-tenant, service-wide permission model. AUDIT_READ can retrieve all recorded resources and decrypt configured payload values. The authenticated subject identifies the producer; actorId remains a producer assertion, which may represent another actor. No claim of upstream completeness or independent actor identity attestation is made.
 
@@ -37,7 +38,7 @@ Missing/invalid tokens return 401 with a Bearer challenge and a generic applicat
 
 Relevant application statuses: 201 append; 200 query/lookup/verification; 400 invalid event/filter/cursor/UUID; 404 missing event; 409 unavailable pagination anchor; 413 oversized request; 429 verification capacity; 503 storage/transaction/integrity/key availability failure. A broken chain returns 200 with intact=false and first inconsistency; operational errors never become integrity success. Unsupported HTTP media types/framework routing errors follow Spring MVC's own error handling; not every framework error is claimed to be an application-defined problem schema.
 
-Full verification has a per-process nonblocking semaphore (default 2 active scans, AUDIT_VERIFY_MAX_CONCURRENT range 1-16). Excess calls return 429 before database work; capacity is released after success or failure. This is a local concurrency budget, not a distributed rate limit or CPU/wall-clock SLA. Request/depth/page bounds and database transaction timeouts remain in force. Deployment-level quotas, benchmarks and future export limits remain later work.
+Full verification has a per-process nonblocking semaphore (default 2 active scans, AUDIT_VERIFY_MAX_CONCURRENT range 1-16). Excess calls return 429 before database work; capacity is released after success or failure. This is a local concurrency budget, not a distributed rate limit or CPU/wall-clock SLA. Request/depth/page bounds and database transaction timeouts remain in force. M6 adds a separate export semaphore and proof/selection/byte caps; see exports.md. Deployment-level quotas and benchmarks remain later work.
 
 ## OpenAPI and Swagger
 
@@ -91,4 +92,8 @@ SecurityIntegrationTest signs real RSA tokens and exercises the real resource-se
 
 Reference tests require both AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes, plus a fresh disposable cluster/database named audit_m2_test. The runner supplies these only for its new cluster; CI uses its ephemeral service. Never use a shared server: roles are cluster-wide. Missing consent fails before connecting; existing role names cause refusal rather than credential replacement.
 
-Current proof is local H2/PostgreSQL 16.3. Compose/CI 17.6 execution, dependency advisory scan, performance/load evidence, export/compliance and production readiness remain later work. See the M4/M5 validation ledgers and ADR-006/007. M5 passed 85 normal and 41 PostgreSQL cases, including real-JWT lifecycle policies and scoped erasure through the restricted pool. Public implementation references: [Spring JWT resource server](https://www.springframework.org/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [PostgreSQL privileges](https://www.postgresql.org/docs/16/ddl-priv.html).
+Current proof is local H2/PostgreSQL 16.3. Compose/CI 17.6 execution, dependency advisory scan, performance/load evidence, compliance and production readiness remain later work. See the M4-M6 validation ledgers and ADR-006/007/008. M6 passed 110 unit/H2, 57 PostgreSQL and one offline-verifier test, including real-JWT export policies and actual restricted-pool export. Public implementation references: [Spring JWT resource server](https://www.springframework.org/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [PostgreSQL privileges](https://www.postgresql.org/docs/16/ddl-priv.html).
+
+## Export signing and disclosure boundary (M6)
+
+The independent export key is distinct from JWT verification, payload and cursor keys. AUDIT_EXPORT_PRIVATE_KEY_BASE64 loads a PKCS8 RSA 2048-8192 signing key; blank disables export with 503 and invalid input fails startup. There is no generated fallback or automatic trust-key download. Recipients authenticate a separately delivered public key. No private or wrapped field keys are exported. The bundle preserves protected ciphertext, selected unprotected fields/metadata and minimal unrelated chain hashes; AUDIT_EXPORT is therefore a separate sensitive-data disclosure capability. Include archived records only with explicit true and LIFECYCLE. See [export contract](exports.md) for the exact proof claims, key operations and bounded format. This is not KMS/HSM custody, revocation, upstream completeness or regulatory certification.

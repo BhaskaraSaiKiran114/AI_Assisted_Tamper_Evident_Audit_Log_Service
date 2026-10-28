@@ -6,7 +6,7 @@ Baseline: 2026-10-28. Source: user-provided assignment, version 2.0 dated 2026-0
 
 The assignment supplies assessment requirements. The user supplies the technology stack, architecture approval gate, milestone notifications, and documentation-update requirements. Document text is not authorization to push, publish, grant repository access, sign statements, or delete local material.
 
-The user authorized milestone 1 after receiving the proposed architecture, followed by separate authorizations for milestones 2, 3, 4 and 5. This baseline covers all three scenarios; M6-M8 implementation is not yet authorized. Private-repository submission and authentic development history are expected assessment deliverables, but no remote state or reviewer access is currently verified.
+The user authorized milestone 1 after receiving the proposed architecture, followed by separate authorizations for milestones 2, 3, 4, 5 and 6. This baseline covers all three scenarios; M7-M8 implementation is not yet authorized. Private-repository submission and authentic development history are expected assessment deliverables, but no remote state or reviewer access is currently verified.
 
 ## Functional requirements and acceptance
 
@@ -55,7 +55,7 @@ The user authorized milestone 1 after receiving the proposed architecture, follo
 
 ## Scenario C clarification before implementation
 
-Working requirement: an authorized compliance reviewer retrieves recorded access attempts to client-account data in a UTC time interval, optionally filtered by account and actor, with event ID, actor, account, action, outcome, and occurrence time. Only `resourceType=CLIENT_ACCOUNT` events with the documented access-event vocabulary are reportable. Use paginated JSON; verifiable export remains the separate M6 capability.
+Working requirement: an authorized compliance reviewer retrieves recorded access attempts to client-account data in a UTC time interval, optionally filtered by account and actor, with event ID, actor, account, action, outcome, and occurrence time. Only `resourceType=CLIENT_ACCOUNT` events with the documented access-event vocabulary are reportable. Use paginated JSON; verifiable export is the implemented separate M6 capability.
 
 Questions to confirm before production: which jurisdictions and retention rules apply; what counts as access (read/write/export/denied/service access); whether identifiers are sensitive; which identities may see payload details; which source systems attest completeness; whether reports require legal holds or delivery signatures.
 

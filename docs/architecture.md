@@ -1,6 +1,6 @@
 # Architecture baseline
 
-Status: M1-M5 implemented under separate user authorizations on 2026-10-28. Ingestion, schema/chaining, queries, verification, JWT permissions, protected OpenAPI/Swagger and PostgreSQL runtime grants are implemented. Audited retention and redaction are implemented; export and reporting remain planned. See encoding/read/security contracts, ADRs and milestone evidence for exact behavior and limits.
+Status: M1-M6 implemented under separate user authorizations on 2026-10-28. Ingestion, schema/chaining, queries, verification, JWT permissions, protected OpenAPI/Swagger and PostgreSQL runtime grants are implemented. Audited retention and redaction are implemented; signed export and its independent verifier are implemented; reporting remains planned. See encoding/read/security contracts, ADRs and milestone evidence for exact behavior and limits.
 
 ## Components and dependencies
 
@@ -22,7 +22,7 @@ flowchart LR
   Reporting --> Trust[Signing key and external checkpoints]
 ```
 
-Packages separate api, security, audit and persistence; lifecycle is implemented; export/reporting will follow. Wrapped field keys are in payload_key, master key outside PostgreSQL (ephemeral for H2). M4 restricts runtime event/key access and separates migration credentials; M5 adds scoped, audited key erasure; external checkpoints remain future work. This is not an enterprise KMS.
+Packages separate api, security, audit and persistence; lifecycle is implemented; export is implemented; reporting will follow. Wrapped field keys are in payload_key, master key outside PostgreSQL (ephemeral for H2). M4 restricts runtime event/key access and separates migration credentials; M5 adds scoped, audited key erasure; external checkpoints remain future work. This is not an enterprise KMS.
 
 ## Persistence model
 
@@ -63,7 +63,7 @@ Archive records older than configured ingestion-time cutoff with a recorded poli
 
 Redaction removes the key for an explicitly protected payload path, exposing a redaction marker on reads while retaining ciphertext committed by the chain. Redaction is irreversible within the active store, and requires human-approved operation context before destructive execution against actual data. Backups/caches/replicas and exported copies limit erasure claims. Unencrypted metadata and fields outside the allowlist are not erasable with this scheme. Separate lifecycle actions from event update APIs.
 
-## Export verification and trust
+## Export verification and trust (M6)
 
 Bundle includes format/hash/canonicalization versions, filter, export time, snapshot head, selected canonical events (protected payload retained), all intervening chain headers sufficient to verify links, and signed manifest covering the bundle digest and membership list. Headers for unselected events disclose minimal metadata/digests, not plaintext payloads. Provide an independent Java verifier with no running service dependency.
 
@@ -71,7 +71,7 @@ This proves included content has not changed since export under the trusted sign
 
 ## API and target access policy
 
-Write/read/verification are now enabled through validated JWTs and the permissions below. M5 lifecycle routes are enabled; export/compliance remain denied until implemented. OpenAPI/Swagger including HTML/config/assets requires separate AUDIT_DOCS.
+Write/read/verification are now enabled through validated JWTs and the permissions below. M5 lifecycle routes are enabled; M6 signed export is enabled; compliance remains denied until implemented. OpenAPI/Swagger including HTML/config/assets requires separate AUDIT_DOCS.
 
 | Operation | Permission | Contract |
 | --- | --- | --- |
@@ -83,7 +83,7 @@ Write/read/verification are now enabled through validated JWTs and the permissio
 | GET /audit/exports | AUDIT_EXPORT | Bounded bundle by actorId or resourceId; resourceType optional disambiguation |
 | GET /audit/compliance/access-report | AUDIT_COMPLIANCE | Restricted account-access summary without payload by default |
 
-M4 pins RS256/RSA >=2048, validates issuer/audience and required subject/time claims with 30-second skew, and maps only recognized permissions strings. Bearer headers only, stateless, safe auth/domain errors; GET health is public. No server identity-provider/token endpoint exists. The actual developer source launcher is tested independently. Full verification has a per-process semaphore (default 2, 429 on exhaustion); export concurrency will be defined in M6 and measured budgets remain M8. Protected browser documentation requires bearer-header support; see the security contract.
+M4 pins RS256/RSA >=2048, validates issuer/audience and required subject/time claims with 30-second skew, and maps only recognized permissions strings. Bearer headers only, stateless, safe auth/domain errors; GET health is public. No server identity-provider/token endpoint exists. The actual developer source launcher is tested independently. Full verification has a per-process semaphore (default 2, 429 on exhaustion); M6 adds a separate export semaphore (default 2) and hard format bounds and measured budgets remain M8. Protected browser documentation requires bearer-header support; see the security contract.
 
 ## Security and production limits
 
@@ -96,3 +96,9 @@ Single-chain throughput, large export headers, long verification transactions, l
 See [lifecycle.md](lifecycle.md) and [ADR-007](decisions/ADR-007-audited-lifecycle-capabilities.md). V4 adds action/archive/redaction evidence; PostgreSQL V5 exposes a single-event/single-path erasure function with restricted execution and fixed search_path. Direct key DELETE stays denied. Commands lock the shared chain head and commit immutable administrative evidence, markers and erasure atomically. Operation IDs bind normalized intent and JWT subject; exact retries return their original receipt, conflicts return 409. Internal administrative records are excluded from retention and redaction targets.
 
 Default retention is P90D/policy v1/batch 100; eligibility is strict ingestion-time less than cutoff. Erasure requires an operator-supplied approval reference, which is not verified against an external approval system. Erasure covers the active transactional store only; WAL, backups, replicas, prior snapshots/in-flight reads and previously disclosed values may remain recoverable. No physical erasure or legal-compliance certification is claimed. Lifecycle state may change between query pages. Proof validation can repeat work across targets; performance measurement remains M8.
+
+## Implemented M6 export boundary
+
+[Export contract](exports.md) and [ADR-008](decisions/ADR-008-bounded-independent-exports.md) freeze the signed ZIP manifest/body format. GET /audit/exports requires actorId or resourceId with AUDIT_EXPORT; archive opt-in adds LIFECYCLE. Each snapshot validates all source records/lifecycle evidence, emits selected protected canonical content and minimal genesis-to-head headers, and signs exact manifest bytes using a separate configured RSA key. No decryption keys or restored protected values leave through export. Missing signing configuration yields 503, malformed configuration fails startup. No migration or database grant changes are needed.
+
+Maven packages a dependency-free Java 21 verifier JAR. Recipients pin a public key out of band. Verification authenticates the manifest/body, recomputes selected hashes, validates selected envelope/header fields, links/order/membership and final head. Hidden-payload headers and lifecycle status are signed assertions; filter completeness, upstream truth and physical erasure are not proved. Export defaults to 10000 whole-chain headers, 1000 selected events, 16 MiB body and two concurrent requests; excess returns 413/429, never partial output. Range/checkpoint formats, external checkpoint operation and M7 reporting are outside M6.

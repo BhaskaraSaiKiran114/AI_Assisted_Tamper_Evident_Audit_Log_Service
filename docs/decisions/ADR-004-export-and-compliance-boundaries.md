@@ -1,6 +1,6 @@
 # ADR-004: Signed exports and bounded compliance reporting
 
-Date: 2026-10-28. Status: design baseline; export M6 and reporting M7.
+Date: 2026-10-28. Status: export implemented M6; see ADR-008 and ../exports.md for frozen format/limits. Reporting remains M7.
 
 Decision: filtered export includes canonical selected events, headers bridging gaps, snapshot metadata and signed manifest. Independent verifier trusts the signing identity out of band. No plaintext sensitive/redacted values. Account-access reports use explicit action/outcome vocabulary and account/actor/time filters without payload by default.
 

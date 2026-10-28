@@ -31,6 +31,12 @@ springdoc:
     disable-swagger-default-url: true
   paths-to-match: /audit/**
 audit:
+  export:
+    private-key-base64: ${AUDIT_EXPORT_PRIVATE_KEY_BASE64:}
+    max-concurrent: ${AUDIT_EXPORT_MAX_CONCURRENT:2}
+    max-records: ${AUDIT_EXPORT_MAX_RECORDS:10000}
+    max-selected: ${AUDIT_EXPORT_MAX_SELECTED:1000}
+    max-bytes: ${AUDIT_EXPORT_MAX_BYTES:16777216}
   retention:
     window: ${AUDIT_RETENTION_WINDOW:P90D}
     policy-version: ${AUDIT_RETENTION_POLICY_VERSION:v1}
