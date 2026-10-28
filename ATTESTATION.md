@@ -1,18 +1,18 @@
 # Attestation - unsigned draft
 
-Status: identity and personal attestation pending human completion. This file records development progress; it is not a signed assertion by the candidate.
+Status: candidate-provided identity and submission date recorded. Personal attestation remains an unsigned draft pending human affirmation. This file records development progress; it is not a signed assertion by the candidate.
 
 | Required field | Value |
 | --- | --- |
-| Full name | PENDING - candidate to supply and confirm |
-| Email address | PENDING - candidate to supply and confirm |
+| Full name | Kallimpudi Bhaskara Sai Kiran |
+| Email address | saikiranbhaskara@gmail.com |
 | Assignment title | Interview Assignment: Build an AI-Assisted Software Engineering System - Audit Log Service |
 | Start date | 2026-10-28 (first observed analysis and implementation in this chat; candidate to confirm actual start date) |
-| Submission date | PENDING - not submitted |
+| Submission date | 2026-10-28 |
 
 ## Required statement for the candidate to complete
 
-I, [your full name], attest that this submission is my own individual work, completed on my own machine and accounts, and that it honestly reflects my development process and use of AI.
+I, Kallimpudi Bhaskara Sai Kiran, attest that this submission is my own individual work, completed on my own machine and accounts, and that it honestly reflects my development process and use of AI.
 
 ## Development and approval record
 
