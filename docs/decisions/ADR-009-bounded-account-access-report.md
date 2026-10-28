@@ -1,0 +1,13 @@
+# ADR-009: Metadata-only account-access reporting with explicit source scope
+
+Date: 2026-10-28. Status: implemented under M7 authorization, refining Scenario C before the final-readiness milestone.
+
+Decision: expose GET /audit/compliance/access-report with independent AUDIT_COMPLIANCE permission, a required bounded occurrence-time window and exact optional account/actor/action/outcome filters. Archive opt-in adds AUDIT_LIFECYCLE. Freeze access-report-v1 as CLIENT_ACCOUNT READ/UPDATE/EXPORT with a plaintext top-level payload.outcome of SUCCESS/DENIED/FAILURE. The documented pre-implementation contract is ../access-report.md; this is a scoped prototype interpretation, not an inferred law or production access policy.
+
+Preserve ordinary ingestion compatibility and frozen event bytes; no new schema or duplicated report projection is necessary. Read immutable stored payload only for the explicit outcome vocabulary; never unwrap keys or return payload. Missing/protected/unsupported outcomes are excluded and counted, never guessed as success. Return only event identity/sequence, asserted actor/account, action/outcome, occurrence time and archive state. Account/actor metadata remains disclosed and outside field-key erasure.
+
+Use existing database-specific snapshots and a domain-separated signed cursor binding all filters/range/limit/archive mode/version and the upper head. Stream parameterized candidates, validate canonical/searchable fields before report use, validate returned archive state, and bound scanned candidates and simultaneous work. Exhausted scan budget fails the whole page, not a partial report with false completeness. Per-request counts include lookahead and can repeat across pages; they are not period totals.
+
+Alternatives rejected: unrestricted audit payload views, inheriting READ authority, decrypting protected outcomes, treating missing outcomes as success, changing existing canonical schema, unsigned/ordinary-query-interchangeable cursors, unbounded reports/aggregations, inferring real legal obligations or upstream completeness. A materialized indexed outcome projection could improve scale but creates migration/reconciliation/commitment responsibilities; measurement belongs to M8 before such tuning.
+
+Trade-offs: post-query outcome selection may exhaust scan budget; malformed matching source fails closed, but records excluded by query predicates and unreported activity cannot be proven complete. Metadata reporting is distinct from full chain/lifecycle verification and M6 signed exports. No tenant controls, legal hold, actor-identity attestation, regulator-specific format, signed report delivery or certification is added. Production questions remain explicit.

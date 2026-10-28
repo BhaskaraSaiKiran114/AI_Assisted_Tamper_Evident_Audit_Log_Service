@@ -44,12 +44,20 @@ public class QueryCursorCodec {
     }
 
     public String encode(Position position, EventQuery query) {
+        return encode(position, "AUDIT-QUERY-FILTER-V1", query.fingerprintFields());
+    }
+
+    public String encode(Position position, String domain, Map<String, Object> context) {
         byte[] payload = canonical.bytes(Map.of("version", 2, "after", position.after(), "upper", position.upper(),
-                "headHash", position.headHash(), "filterHash", fingerprint(query)));
+                "headHash", position.headHash(), "filterHash", fingerprint(domain, context)));
         return encode(payload) + "." + encode(sign(payload));
     }
 
     public Position decode(String cursor, EventQuery query) {
+        return decode(cursor, "AUDIT-QUERY-FILTER-V1", query.fingerprintFields());
+    }
+
+    public Position decode(String cursor, String domain, Map<String, Object> context) {
         try {
             if (!cursor.matches("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+") || cursor.length() > 2048) {
                 throw new IllegalArgumentException();
@@ -62,7 +70,7 @@ public class QueryCursorCodec {
             }
             Map<String, Object> fields = json.object(payload);
             if (!fields.keySet().equals(Set.of("version", "after", "upper", "headHash", "filterHash"))
-                    || !BigInteger.TWO.equals(fields.get("version")) || !fingerprint(query).equals(fields.get("filterHash"))) {
+                    || !BigInteger.TWO.equals(fields.get("version")) || !fingerprint(domain, context).equals(fields.get("filterHash"))) {
                 throw new IllegalArgumentException();
             }
             long after = ((BigInteger) fields.get("after")).longValueExact();
@@ -77,11 +85,11 @@ public class QueryCursorCodec {
         }
     }
 
-    private String fingerprint(EventQuery query) {
+    private String fingerprint(String domain, Map<String, Object> context) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update("AUDIT-QUERY-FILTER-V1\0".getBytes(StandardCharsets.US_ASCII));
-            return HexFormat.of().formatHex(digest.digest(canonical.bytes(query.fingerprintFields())));
+            digest.update((domain + "\0").getBytes(StandardCharsets.US_ASCII));
+            return HexFormat.of().formatHex(digest.digest(canonical.bytes(context)));
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException(exception);
         }

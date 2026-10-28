@@ -1,6 +1,6 @@
-# Security and API contract - milestones 4-6
+# Security and API contract - milestones 4-7
 
-M4 enables the implemented write/read/verification APIs through stateless JWT authentication. Health remains public. M5 enables lifecycle commands with AUDIT_LIFECYCLE; M6 enables export with AUDIT_EXPORT; compliance remains denied.
+M4 enables the implemented write/read/verification APIs through stateless JWT authentication. Health remains public. M5 enables lifecycle commands with AUDIT_LIFECYCLE; M6 enables export with AUDIT_EXPORT; M7 enables metadata-only reporting with AUDIT_COMPLIANCE.
 
 ## JWT trust contract
 
@@ -21,6 +21,7 @@ The application holds only the verification public key. The local developer help
 | POST /audit/events | AUDIT_WRITE |
 | GET /audit/events, GET /audit/events/{eventId} | AUDIT_READ |
 | GET /audit/verify | AUDIT_VERIFY |
+| GET /audit/compliance/access-report | AUDIT_COMPLIANCE; add AUDIT_LIFECYCLE for includeArchived=true |
 | GET /audit/exports | AUDIT_EXPORT; add AUDIT_LIFECYCLE for includeArchived=true |
 | POST /audit/retention/runs, POST /audit/events/{eventId}/redactions | AUDIT_LIFECYCLE |
 | GET event list/lookup with includeArchived=true | AUDIT_READ and AUDIT_LIFECYCLE |
@@ -28,7 +29,7 @@ The application holds only the verification public key. The local developer help
 | GET /swagger-ui.html, /swagger-ui/** including assets | AUDIT_DOCS |
 | Any unlisted method/path | Denied |
 
-Permissions have no implicit hierarchy. AUDIT_DOCS does not read event payloads; AUDIT_READ does not append or verify. AUDIT_LIFECYCLE permits the two implemented POST lifecycle routes. Archived read opt-in requires AUDIT_READ plus AUDIT_LIFECYCLE. AUDIT_EXPORT permits bounded protected export without granting ordinary payload decryption. Archive export opt-in requires EXPORT plus LIFECYCLE. AUDIT_COMPLIANCE does not enable its unimplemented endpoint. PUT/PATCH/DELETE are not event APIs and remain denied even with every permission.
+Permissions have no implicit hierarchy. AUDIT_DOCS does not read event payloads; AUDIT_READ does not append or verify. AUDIT_LIFECYCLE permits the two implemented POST lifecycle routes. Archived read opt-in requires AUDIT_READ plus AUDIT_LIFECYCLE. AUDIT_EXPORT permits bounded protected export without granting ordinary payload decryption. Archive export opt-in requires EXPORT plus LIFECYCLE. AUDIT_COMPLIANCE enables only the implemented account-access report; it grants no general payload read/decryption or export. PUT/PATCH/DELETE are not event APIs and remain denied even with every permission.
 
 This is a single-tenant, service-wide permission model. AUDIT_READ can retrieve all recorded resources and decrypt configured payload values. The authenticated subject identifies the producer; actorId remains a producer assertion, which may represent another actor. No claim of upstream completeness or independent actor identity attestation is made.
 
@@ -92,8 +93,12 @@ SecurityIntegrationTest signs real RSA tokens and exercises the real resource-se
 
 Reference tests require both AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes, plus a fresh disposable cluster/database named audit_m2_test. The runner supplies these only for its new cluster; CI uses its ephemeral service. Never use a shared server: roles are cluster-wide. Missing consent fails before connecting; existing role names cause refusal rather than credential replacement.
 
-Current proof is local H2/PostgreSQL 16.3. Compose/CI 17.6 execution, dependency advisory scan, performance/load evidence, compliance and production readiness remain later work. See the M4-M6 validation ledgers and ADR-006/007/008. M6 passed 110 unit/H2, 57 PostgreSQL and one offline-verifier test, including real-JWT export policies and actual restricted-pool export. Public implementation references: [Spring JWT resource server](https://www.springframework.org/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [PostgreSQL privileges](https://www.postgresql.org/docs/16/ddl-priv.html).
+Current proof is local H2/PostgreSQL 16.3. Compose/CI 17.6 execution, dependency advisory scan, performance/load evidence and production readiness remain later work. See the M4-M7 validation ledgers and ADR-006/007/008/009. M7 passed 132 unit/H2, 74 PostgreSQL and one offline-verifier test, including real-JWT report policies and actual restricted-pool reporting. Public implementation references: [Spring JWT resource server](https://www.springframework.org/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [PostgreSQL privileges](https://www.postgresql.org/docs/16/ddl-priv.html).
 
 ## Export signing and disclosure boundary (M6)
 
 The independent export key is distinct from JWT verification, payload and cursor keys. AUDIT_EXPORT_PRIVATE_KEY_BASE64 loads a PKCS8 RSA 2048-8192 signing key; blank disables export with 503 and invalid input fails startup. There is no generated fallback or automatic trust-key download. Recipients authenticate a separately delivered public key. No private or wrapped field keys are exported. The bundle preserves protected ciphertext, selected unprotected fields/metadata and minimal unrelated chain hashes; AUDIT_EXPORT is therefore a separate sensitive-data disclosure capability. Include archived records only with explicit true and LIFECYCLE. See [export contract](exports.md) for the exact proof claims, key operations and bounded format. This is not KMS/HSM custody, revocation, upstream completeness or regulatory certification.
+
+## Account-access reporting boundary (M7)
+
+Required occurrence-time bounds, exact CLIENT_ACCOUNT/action/outcome scope, metadata-only projection and independent COMPLIANCE authority restrict this endpoint. No includePayload escape hatch exists. Unsupported or protected outcomes are excluded/countable without key reads. A separate report cursor domain binds request context; ordinary query cursors cannot be replayed here or report cursors there. Streamed candidate count/time/concurrency are bounded. See [access-report contract](access-report.md) for required metadata disclosure, source/trust assumptions and lack of regulatory certification. Whole-chain/lifecycle verification and signed export remain separate authorities/operations.

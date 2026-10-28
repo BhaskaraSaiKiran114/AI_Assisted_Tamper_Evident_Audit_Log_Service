@@ -45,18 +45,24 @@ public class OpenApiConfiguration {
                     "GET /audit/events/{eventId}", "AUDIT_READ", "GET /audit/verify", "AUDIT_VERIFY",
                     "POST /audit/retention/runs", "AUDIT_LIFECYCLE",
                     "GET /audit/exports", "AUDIT_EXPORT",
+                    "GET /audit/compliance/access-report", "AUDIT_COMPLIANCE",
                     "POST /audit/events/{eventId}/redactions", "AUDIT_LIFECYCLE")
                     .get(method.name() + " " + path);
             if (permission == null) {
                 throw new IllegalStateException("New API operations need an explicit documented permission");
             }
             operation.addExtension("x-required-permission", permission);
-            if (method.name().equals("GET") && (path.startsWith("/audit/events") || path.equals("/audit/exports"))) {
+            if (method.name().equals("GET") && (path.startsWith("/audit/events") || path.equals("/audit/exports")
+                    || permission.equals("AUDIT_COMPLIANCE"))) {
                 operation.addExtension("x-include-archived-permission", "AUDIT_LIFECYCLE");
             }
             var errors = new java.util.LinkedHashMap<>(Map.of("400", "Invalid request", "401", "Invalid or absent bearer token",
                     "403", "Missing permission", "503", "Execution, integrity or key availability failure"));
-            if (permission.equals("AUDIT_EXPORT")) {
+            if (permission.equals("AUDIT_COMPLIANCE")) {
+                errors.put("409", "Report pagination anchor unavailable");
+                errors.put("413", "Report scan budget exceeded");
+                errors.put("429", "Report capacity exhausted");
+            } else if (permission.equals("AUDIT_EXPORT")) {
                 errors.put("413", "Export exceeds proof, selection or byte limit");
                 errors.put("429", "Export capacity exhausted");
             } else if (permission.equals("AUDIT_LIFECYCLE")) {

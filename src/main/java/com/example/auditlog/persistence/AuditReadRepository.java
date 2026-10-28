@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import com.example.auditlog.audit.EventQuery;
 import com.example.auditlog.audit.VerificationResult.ChainHead;
+import com.example.auditlog.report.AccessReportQuery;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -77,6 +78,30 @@ public class AuditReadRepository {
         return jdbc.queryForStream(connection -> {
             var statement = connection.prepareStatement("SELECT * FROM audit_event ORDER BY event_sequence ASC");
             statement.setFetchSize(100);
+            return statement;
+        }, this::map);
+    }
+
+    public Stream<StoredEvent> accessCandidates(AccessReportQuery query, long after, long upper, int scanLimit) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM audit_event WHERE event_sequence > ? AND event_sequence <= ? "
+                + "AND resource_type = 'CLIENT_ACCOUNT' AND event_type IN ('READ', 'UPDATE', 'EXPORT') "
+                + "AND occurred_at >= ? AND occurred_at < ?");
+        List<Object> parameters = new ArrayList<>(List.of(after, upper, OffsetDateTime.ofInstant(query.from(), ZoneOffset.UTC),
+                OffsetDateTime.ofInstant(query.to(), ZoneOffset.UTC)));
+        filter(sql, parameters, "actor_id", query.actorId());
+        filter(sql, parameters, "resource_id", query.accountId());
+        filter(sql, parameters, "event_type", query.action());
+        if (!query.includeArchived()) {
+            sql.append(" AND NOT EXISTS (SELECT 1 FROM event_archive a WHERE a.event_id = audit_event.event_id)");
+        }
+        sql.append(" ORDER BY event_sequence ASC LIMIT ?");
+        parameters.add(scanLimit + 1);
+        return jdbc.queryForStream(connection -> {
+            var statement = connection.prepareStatement(sql.toString());
+            statement.setFetchSize(100);
+            for (int index = 0; index < parameters.size(); index++) {
+                statement.setObject(index + 1, parameters.get(index));
+            }
             return statement;
         }, this::map);
     }

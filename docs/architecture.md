@@ -1,6 +1,6 @@
 # Architecture baseline
 
-Status: M1-M6 implemented under separate user authorizations on 2026-10-28. Ingestion, schema/chaining, queries, verification, JWT permissions, protected OpenAPI/Swagger and PostgreSQL runtime grants are implemented. Audited retention and redaction are implemented; signed export and its independent verifier are implemented; reporting remains planned. See encoding/read/security contracts, ADRs and milestone evidence for exact behavior and limits.
+Status: M1-M7 implemented under separate user authorizations on 2026-10-28. Ingestion, schema/chaining, queries, verification, JWT permissions, protected OpenAPI/Swagger and PostgreSQL runtime grants are implemented. Audited retention and redaction are implemented; signed export and its independent verifier are implemented; bounded metadata-only account-access reporting is implemented. See encoding/read/security contracts, ADRs and milestone evidence for exact behavior and limits.
 
 ## Components and dependencies
 
@@ -22,7 +22,7 @@ flowchart LR
   Reporting --> Trust[Signing key and external checkpoints]
 ```
 
-Packages separate api, security, audit and persistence; lifecycle is implemented; export is implemented; reporting will follow. Wrapped field keys are in payload_key, master key outside PostgreSQL (ephemeral for H2). M4 restricts runtime event/key access and separates migration credentials; M5 adds scoped, audited key erasure; external checkpoints remain future work. This is not an enterprise KMS.
+Packages separate api, security, audit and persistence; lifecycle is implemented; export is implemented; reporting is implemented. Wrapped field keys are in payload_key, master key outside PostgreSQL (ephemeral for H2). M4 restricts runtime event/key access and separates migration credentials; M5 adds scoped, audited key erasure; external checkpoints remain future work. This is not an enterprise KMS.
 
 ## Persistence model
 
@@ -71,7 +71,7 @@ This proves included content has not changed since export under the trusted sign
 
 ## API and target access policy
 
-Write/read/verification are now enabled through validated JWTs and the permissions below. M5 lifecycle routes are enabled; M6 signed export is enabled; compliance remains denied until implemented. OpenAPI/Swagger including HTML/config/assets requires separate AUDIT_DOCS.
+Write/read/verification are now enabled through validated JWTs and the permissions below. M5 lifecycle routes are enabled; M6 signed export is enabled; M7 access reporting is enabled through AUDIT_COMPLIANCE. OpenAPI/Swagger including HTML/config/assets requires separate AUDIT_DOCS.
 
 | Operation | Permission | Contract |
 | --- | --- | --- |
@@ -102,3 +102,9 @@ Default retention is P90D/policy v1/batch 100; eligibility is strict ingestion-t
 [Export contract](exports.md) and [ADR-008](decisions/ADR-008-bounded-independent-exports.md) freeze the signed ZIP manifest/body format. GET /audit/exports requires actorId or resourceId with AUDIT_EXPORT; archive opt-in adds LIFECYCLE. Each snapshot validates all source records/lifecycle evidence, emits selected protected canonical content and minimal genesis-to-head headers, and signs exact manifest bytes using a separate configured RSA key. No decryption keys or restored protected values leave through export. Missing signing configuration yields 503, malformed configuration fails startup. No migration or database grant changes are needed.
 
 Maven packages a dependency-free Java 21 verifier JAR. Recipients pin a public key out of band. Verification authenticates the manifest/body, recomputes selected hashes, validates selected envelope/header fields, links/order/membership and final head. Hidden-payload headers and lifecycle status are signed assertions; filter completeness, upstream truth and physical erasure are not proved. Export defaults to 10000 whole-chain headers, 1000 selected events, 16 MiB body and two concurrent requests; excess returns 413/429, never partial output. Range/checkpoint formats, external checkpoint operation and M7 reporting are outside M6.
+
+## Implemented M7 report boundary
+
+[Access-report contract](access-report.md) and [ADR-009](decisions/ADR-009-bounded-account-access-report.md) refine Scenario C without changing canonical event schema or adding a projection table. report.AccessReportQuery/Service and the controller stream parameterized CLIENT_ACCOUNT/recognized-action candidates under ReadSnapshot. Require from/to (default maximum 31 days), validate stored commitments, read only a supported plaintext outcome, and project eight metadata fields. No field keys or decryption path are used. Unsupported/protected outcomes are counted as exclusions; other source types are outside declared scope.
+
+AUDIT_COMPLIANCE opens only this report; archive opt-in additionally requires LIFECYCLE. Report cursors reuse the HMAC implementation with a distinct purpose/context, preserving ordinary query v2 compatibility while preventing cross-endpoint replay. Range/filter/limit/archive/version and upper-head identity are bound. Default scan budget 1000 and concurrency two return 413/429 on excess, with no partial report. Per-request scan/exclusion counts include lookahead and are not period totals. The report is neither a full-chain verification nor a signed M6 export, and cannot certify legal compliance, independently establish actor identity or detect upstream omissions. M8 remains unstarted.

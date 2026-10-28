@@ -1,6 +1,6 @@
 # Tamper-Evident Audit Log Service
 
-Engineer-led Java prototype. **Milestones 1-6 complete (6/8, 75%).** Ingestion, protected payloads, atomic hash-chain append, filtered reads/pagination, verification, JWT permissions, protected OpenAPI/Swagger and restricted PostgreSQL runtime credentials are implemented. Audited retention and selective field-key erasure are implemented; signed export and an independent verifier are implemented; compliance remains planned.
+Engineer-led Java prototype. **Milestones 1-7 complete (7/8, 87.5%).** Ingestion, protected payloads, atomic hash-chain append, filtered reads/pagination, verification, JWT permissions, protected OpenAPI/Swagger and restricted PostgreSQL runtime credentials are implemented. Audited retention and selective field-key erasure are implemented; signed export and an independent verifier are implemented; bounded metadata-only account-access reporting is implemented.
 
 ## Engineering baseline
 
@@ -68,7 +68,7 @@ Generate the payload master key once (for example `[Convert]::ToBase64String([Se
 
 ## Reference-database verification
 
-Normal verify runs 110 unit/H2/security tests plus one packaged offline-verifier integration test. postgres-it runs 58 Failsafe cases: 57 PostgreSQL cases (8 append, 16 read/verify, 13 lifecycle, 11 export, 9 real runtime-role cases) plus the same one offline-verifier case. It requires a fresh disposable cluster/database audit_m2_test, administrator AUDIT_TEST_DB_URL/USERNAME/PASSWORD, AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes. Tests create cluster-wide roles, clear/corrupt fixture data and verify denied mutations. Existing role names or missing consent cause refusal. Never target a shared server or useful data; the runner sets consent only for its new cluster.
+Normal verify runs 132 unit/H2/security tests plus one packaged offline-verifier integration test. postgres-it runs 75 Failsafe cases: 74 PostgreSQL cases (8 append, 16 read/verify, 13 lifecycle, 11 export, 12 report, 14 real runtime-role cases) plus the same one offline-verifier case. It requires a fresh disposable cluster/database audit_m2_test, administrator AUDIT_TEST_DB_URL/USERNAME/PASSWORD, AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes. Tests create cluster-wide roles, clear/corrupt fixture data and verify denied mutations. Existing role names or missing consent cause refusal. Never target a shared server or useful data; the runner sets consent only for its new cluster.
 
 Windows with installed PostgreSQL binaries can create, test and stop a separate temporary cluster without Docker or using an existing service:
 
@@ -88,7 +88,7 @@ Verification traverses all stored records and reports intact, checkedCount, snap
 
 ## Quality gates
 
-Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M6 passed all 168 combined cases, including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
+Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M7 passed all 207 combined cases, including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
 
 ```powershell
 .\mvnw.cmd -Psecurity-audit verify
@@ -119,4 +119,22 @@ Retention defaults to P90D, policy v1 and batches of 100; set AUDIT_RETENTION_WI
 
 See the [export contract/setup](docs/exports.md), [format decision](docs/decisions/ADR-008-bounded-independent-exports.md) and [M6 evidence](docs/validation/milestone-6.md). GET /audit/exports?actorId=synthetic-actor (or resourceId) requires AUDIT_EXPORT. Archive opt-in additionally needs LIFECYCLE. Configure a separate AUDIT_EXPORT_PRIVATE_KEY_BASE64; blank means exports return 503. Selected original protected bytes, minimal bridging headers and signed manifest form a bounded ZIP; no field keys or decrypted protected values are included.
 
-Normal package also creates target/audit-log-service-0.1.0-SNAPSHOT-verifier.jar. Run it with Java 21, a bundle path and a separately trusted Base64 SPKI public-key file. The tool needs no service, database, Maven or third-party libraries; normal clean verify executes the packaged tool. Defaults cap whole-chain headers at 10000, selected events at 1000, body at 16 MiB and concurrent exports at two. Limits fail without partial output. Signed hidden-content headers/status do not prove filter completeness, upstream truth or physical erasure. M7-M8 have not started.
+Normal package also creates target/audit-log-service-0.1.0-SNAPSHOT-verifier.jar. Run it with Java 21, a bundle path and a separately trusted Base64 SPKI public-key file. The tool needs no service, database, Maven or third-party libraries; normal clean verify executes the packaged tool. Defaults cap whole-chain headers at 10000, selected events at 1000, body at 16 MiB and concurrent exports at two. Limits fail without partial output. Signed hidden-content headers/status do not prove filter completeness, upstream truth or physical erasure. M8 has not started.
+
+## Account-access reporting (M7)
+
+[Report contract](docs/access-report.md), [ADR-009](docs/decisions/ADR-009-bounded-account-access-report.md) and [M7 evidence](docs/validation/milestone-7.md) define the bounded Scenario C interpretation. GET /audit/compliance/access-report requires AUDIT_COMPLIANCE, mandatory from/to occurrence-time bounds (default maximum 31 days), and optionally accountId/actorId/action/outcome. Limit defaults 50 (max 200); cursors bind the report context separately from ordinary queries. Archive opt-in adds AUDIT_LIFECYCLE.
+
+Only CLIENT_ACCOUNT READ/UPDATE/EXPORT with plaintext payload.outcome SUCCESS/DENIED/FAILURE are reportable. Unsupported/protected outcomes are excluded and counted, never inferred or decrypted. Responses contain only eventId/sequence, actorId/accountId, action/outcome, occurredAt and archived. No payload or field keys are returned. Producer assertions and missing upstream activity cannot be certified. Per-page scan/exclusion counts include lookahead and are not period totals; use M6 separately for signed exports. Defaults cap candidate scans at 1000 and concurrent reports at two; excess fails without partial output.
+
+```powershell
+$reportToken = & "$env:JAVA_HOME\bin\java.exe" scripts/LocalJwt.java token .tools/jwt 'AUDIT_COMPLIANCE'
+$reportHeaders = @{ Authorization = "Bearer $reportToken" }
+Invoke-RestMethod 'http://127.0.0.1:8080/audit/compliance/access-report?from=2026-10-01T00:00:00Z&to=2026-10-02T00:00:00Z&accountId=synthetic-account' -Headers $reportHeaders
+```
+
+Synthetic producer payload example (append using a separate WRITE-authorized token):
+
+```json
+{"eventType":"READ","actorId":"synthetic-actor","resourceType":"CLIENT_ACCOUNT","resourceId":"synthetic-account","timestamp":"2026-10-01T12:00:00Z","payload":{"outcome":"SUCCESS","accountNumber":"synthetic-only"}}
+```
