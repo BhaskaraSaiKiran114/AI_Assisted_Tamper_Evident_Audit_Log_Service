@@ -1,5 +1,7 @@
 package com.example.auditlog.report;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -56,6 +58,10 @@ public class AccessReportService {
     }
 
     public Report report(AccessReportQuery query) {
+        return report(query, ResourceScope.internal());
+    }
+
+    public Report report(AccessReportQuery query, ResourceScope scope) {
         if (Duration.between(query.from(), query.to()).compareTo(maxWindow) > 0) {
             throw new InvalidEventException("Report time window exceeds configured maximum");
         }
@@ -63,13 +69,13 @@ public class AccessReportService {
             throw new AuditQueryException(429, "Report capacity exhausted; retry later");
         }
         try {
-            return snapshots.execute(30, () -> page(query));
+            return snapshots.execute(30, () -> page(query, scope));
         } finally {
             permits.release();
         }
     }
 
-    private Report page(AccessReportQuery query) {
+    private Report page(AccessReportQuery query, ResourceScope scope) {
         Position position;
         if (query.cursor() == null) {
             var head = repository.head().orElseThrow(() -> new AuditQueryException(503, "Report snapshot unavailable"));
@@ -78,7 +84,7 @@ public class AccessReportService {
             }
             position = new Position(0, head.sequence(), head.hash());
         } else {
-            position = cursors.decode(query.cursor(), DOMAIN, query.context());
+            position = cursors.decode(query.cursor(), DOMAIN, scope.context(query.context()));
         }
         if (position.upper() == 0 && !position.headHash().equals("0".repeat(64))
                 || position.upper() > 0 && !repository.hashAt(position.upper()).orElse("").equals(position.headHash())) {
@@ -88,7 +94,7 @@ public class AccessReportService {
         int scanned = 0;
         int excluded = 0;
         boolean more = false;
-        try (var stream = repository.accessCandidates(query, position.after(), position.upper(), scanLimit)) {
+        try (var stream = repository.accessCandidates(query, position.after(), position.upper(), scanLimit, scope)) {
             var rows = stream.iterator();
             while (rows.hasNext()) {
                 var event = rows.next();
@@ -116,7 +122,7 @@ public class AccessReportService {
             throw new AuditQueryException(503, "Report source failed integrity checks");
         }
         String cursor = more ? cursors.encode(new Position(entries.getLast().sequence(), position.upper(), position.headHash()),
-                DOMAIN, query.context()) : null;
+                DOMAIN, scope.context(query.context())) : null;
         return new Report(AccessReportQuery.VERSION, List.copyOf(entries), query.limit(), cursor,
                 new ChainHead(position.upper(), position.headHash()), scanned, excluded);
     }

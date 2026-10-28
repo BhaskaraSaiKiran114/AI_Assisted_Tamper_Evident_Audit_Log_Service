@@ -3,7 +3,9 @@ param(
     [int]$Port = 55432,
     [string]$MavenRepository = '',
     [switch]$Offline,
-    [switch]$Readiness
+    [switch]$Readiness,
+    [string]$EvidencePython = '',
+    [string]$EvidenceSourceRoot = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,9 +57,9 @@ try {
     $env:AUDIT_TEST_DB_PASSWORD = $password
     $env:AUDIT_TEST_DB_DESTRUCTIVE_OK = 'yes'
     $env:AUDIT_TEST_CLUSTER_ROLES_OK = 'yes'
-    $mavenArguments = @('--batch-mode', '--no-transfer-progress', '-Ppostgres-it', 'clean', 'verify')
+    $mavenArguments = @('--batch-mode', '--no-transfer-progress', '-Ppostgres-it', 'verify')
     if ($Readiness) {
-        $mavenArguments = @('--batch-mode', '--no-transfer-progress', '-Ppostgres-it,readiness', 'clean', 'verify')
+        $mavenArguments = @('--batch-mode', '--no-transfer-progress', '-Ppostgres-it,readiness', 'verify')
     }
     if ($MavenRepository) {
         $mavenArguments += "-Dmaven.repo.local=$MavenRepository"
@@ -65,9 +67,39 @@ try {
     if ($Offline) {
         $mavenArguments += '--offline'
     }
+    $cleanArguments = @('--batch-mode', '--no-transfer-progress', 'clean')
+    if ($MavenRepository) {
+        $cleanArguments += "-Dmaven.repo.local=$MavenRepository"
+    }
+    if ($Offline) {
+        $cleanArguments += '--offline'
+    }
+    & (Join-Path $projectRoot 'mvnw.cmd') @cleanArguments
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Clean failed; refusing stale test evidence'
+    }
+    $evidenceArguments = @()
+    if ($EvidenceSourceRoot) {
+        $evidenceArguments += @('--source-root', $EvidenceSourceRoot)
+    }
+    if ($EvidencePython) {
+        & $EvidencePython (Join-Path $projectRoot 'scripts/build-evidence.py') @evidenceArguments --begin
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Could not capture build inputs'
+        }
+    }
     & (Join-Path $projectRoot 'mvnw.cmd') @mavenArguments
     if ($LASTEXITCODE -ne 0) {
         throw 'PostgreSQL milestone verification failed; inspect Maven test reports'
+    }
+    if ($EvidencePython) {
+        if ($Readiness) {
+            $evidenceArguments += '--reference'
+        }
+        & $EvidencePython (Join-Path $projectRoot 'scripts/build-evidence.py') @evidenceArguments
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Validation evidence rejected'
+        }
     }
 } finally {
     if ($started) {

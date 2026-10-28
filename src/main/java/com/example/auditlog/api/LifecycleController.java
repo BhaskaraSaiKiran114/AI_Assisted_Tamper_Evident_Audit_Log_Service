@@ -1,5 +1,7 @@
 package com.example.auditlog.api;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.io.IOException;
 
 import com.example.auditlog.audit.InvalidEventException;
@@ -33,6 +35,7 @@ public class LifecycleController {
             + "Server ingestion age and configured policy determine eligibility. Same operation ID/request safely replays.",
             requestBody = @RequestBody(required = true, content = @Content(schema = @Schema(implementation = RetentionBody.class))))
     public LifecycleReceipt retain(HttpServletRequest request, @Parameter(hidden = true) Authentication authentication) throws IOException {
+        ResourceScope.from(authentication).requireGlobal();
         return service.retain(parser.retention(body(request)), authentication.getName());
     }
 
@@ -42,7 +45,8 @@ public class LifecycleController {
             requestBody = @RequestBody(required = true, content = @Content(schema = @Schema(implementation = RedactionBody.class))))
     public LifecycleReceipt redact(@PathVariable String eventId, HttpServletRequest request,
             @Parameter(hidden = true) Authentication authentication) throws IOException {
-        return service.redact(LifecycleRequest.uuid(eventId), parser.redaction(body(request)), authentication.getName());
+        return service.redact(LifecycleRequest.uuid(eventId), parser.redaction(body(request)), authentication.getName(),
+                ResourceScope.from(authentication));
     }
 
     @Schema(additionalProperties = Schema.AdditionalPropertiesValue.FALSE)

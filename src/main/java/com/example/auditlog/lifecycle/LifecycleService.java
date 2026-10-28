@@ -1,5 +1,7 @@
 package com.example.auditlog.lifecycle;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -102,6 +104,13 @@ public class LifecycleService {
 
     @Transactional(timeout = 30)
     public LifecycleReceipt redact(UUID eventId, Redaction request, String actor) {
+        return redact(eventId, request, actor, ResourceScope.internal());
+    }
+
+    @Transactional(timeout = 30)
+    public LifecycleReceipt redact(UUID eventId, Redaction request, String actor, ResourceScope scope) {
+        var authorized = events.find(eventId).filter(event -> scope.permits(event.resourceType(), event.resourceId()))
+                .orElseThrow(() -> new AuditQueryException(404, "Audit event not found"));
         String fingerprint = fingerprint(Map.of("action", "REDACTION", "actorId", actor, "eventId", eventId.toString(),
                 "reason", request.reason(), "approvalReference", request.approvalReference(), "paths", request.paths()));
         repository.lockHead();
@@ -109,7 +118,7 @@ public class LifecycleService {
         if (existing.isPresent()) {
             return replay(existing.get(), fingerprint);
         }
-        var target = events.find(eventId).orElseThrow(() -> new AuditQueryException(404, "Audit event not found"));
+        var target = authorized;
         if (target.eventType().startsWith("AUDIT_INTERNAL_")) {
             throw new InvalidEventException("Lifecycle evidence cannot be redacted");
         }

@@ -1,0 +1,35 @@
+package com.example.auditlog;
+
+import java.util.List;
+
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+
+@SpringBootTest(properties = "audit.retention.window=P1D")
+@AutoConfigureMockMvc
+@ActiveProfiles("postgres")
+class PostgresResourceAuthorizationIT extends ResourceAuthorizationContract {
+    @DynamicPropertySource
+    static void configure(DynamicPropertyRegistry registry) {
+        PostgresFixture.configure(registry, true);
+        registry.add("audit.export.private-key-base64", ExportTestKeys::privateKey);
+    }
+
+    @Override
+    protected void clean() throws Exception {
+        try (var connection = PostgresFixture.admin(); var statement = connection.createStatement()) {
+            for (String table : List.of("payload_redaction", "event_archive", "lifecycle_action", "payload_key", "audit_event")) {
+                statement.executeUpdate("DELETE FROM " + table);
+            }
+            statement.executeUpdate("UPDATE chain_head SET last_sequence = 0, last_hash = '" + "0".repeat(64) + "'");
+        }
+        assertRuntimeRole();
+    }
+
+    private void assertRuntimeRole() {
+        org.assertj.core.api.Assertions.assertThat(jdbc.queryForObject("SELECT current_user", String.class)).isEqualTo("audit_runtime");
+    }
+}

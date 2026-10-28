@@ -63,6 +63,7 @@ public class JwtConfiguration {
     private OAuth2TokenValidator<Jwt> requiredClaims(String audience) {
         return jwt -> {
             try {
+                ResourceScope.claims(jwt.getSubject(), jwt.getClaims());
                 Object permissions = jwt.getClaims().get("permissions");
                 boolean permissionShape = permissions == null || permissions instanceof List<?> list
                         && list.stream().allMatch(value -> value instanceof String);

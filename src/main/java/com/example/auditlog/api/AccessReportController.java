@@ -1,5 +1,7 @@
 package com.example.auditlog.api;
 
+import com.example.auditlog.security.ResourceScope;
+
 import com.example.auditlog.report.AccessReportQuery;
 import com.example.auditlog.report.AccessReportService;
 import com.example.auditlog.report.AccessReportService.Report;
@@ -43,6 +45,6 @@ public class AccessReportController {
                 .noneMatch(authority -> authority.getAuthority().equals("AUDIT_LIFECYCLE"))) {
             throw new AccessDeniedException("Archived report requires lifecycle permission");
         }
-        return service.report(query);
+        return service.report(query, ResourceScope.from(authentication));
     }
 }

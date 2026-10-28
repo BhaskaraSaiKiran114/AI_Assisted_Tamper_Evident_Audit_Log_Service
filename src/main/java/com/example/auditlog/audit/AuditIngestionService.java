@@ -1,5 +1,7 @@
 package com.example.auditlog.audit;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -21,7 +23,12 @@ public class AuditIngestionService {
     }
 
     public AppendReceipt append(byte[] request) {
+        return append(request, ResourceScope.internal());
+    }
+
+    public AppendReceipt append(byte[] request, ResourceScope scope) {
         EventInput input = parser.parse(request);
+        scope.require(input.resourceType(), input.resourceId());
         UUID id = UUID.randomUUID();
         Instant ingested = Instant.now().truncatedTo(ChronoUnit.MICROS);
         return appender.append(id, ingested, input, protector.protect(id, input.payload()));

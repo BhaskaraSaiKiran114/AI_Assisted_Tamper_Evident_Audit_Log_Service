@@ -31,7 +31,7 @@ The application holds only the verification public key. The local developer help
 
 Permissions have no implicit hierarchy. AUDIT_DOCS does not read event payloads; AUDIT_READ does not append or verify. AUDIT_LIFECYCLE permits the two implemented POST lifecycle routes. Archived read opt-in requires AUDIT_READ plus AUDIT_LIFECYCLE. AUDIT_EXPORT permits bounded protected export without granting ordinary payload decryption. Archive export opt-in requires EXPORT plus LIFECYCLE. AUDIT_COMPLIANCE enables only the implemented account-access report; it grants no general payload read/decryption or export. PUT/PATCH/DELETE are not event APIs and remain denied even with every permission.
 
-This is a single-tenant, service-wide permission model. AUDIT_READ can retrieve all recorded resources and decrypt configured payload values. The authenticated subject identifies the producer; actorId remains a producer assertion, which may represent another actor. No claim of upstream completeness or independent actor identity attestation is made.
+Resource-scoped authorization supersedes the original service-wide policy (ADR-010). Every business call requires issuer-signed audit_resources exact resourceType/resourceId pairs, or explicit audit_global=true, in addition to its AUDIT_* permission. No assignments means 403; malformed assignments invalidate the JWT (401). AUDIT_READ decrypts configured values only within the assigned resources. Global operators can access all resources allowed by their independent permissions. The authenticated subject identifies the producer; actorId remains a producer assertion, which may represent another actor. No claim of upstream completeness or independent actor identity attestation is made.
 
 ## HTTP error and resource policy
 
@@ -60,7 +60,7 @@ $env:AUDIT_JWT_PUBLIC_KEY_BASE64 = (Get-Content .tools/jwt/public-key-base64.txt
 In a second terminal with the same Java 21 setup:
 
 ```powershell
-$token = & "$env:JAVA_HOME\bin\java.exe" scripts/LocalJwt.java token .tools/jwt 'AUDIT_WRITE,AUDIT_READ,AUDIT_VERIFY,AUDIT_DOCS'
+$token = & "$env:JAVA_HOME\bin\java.exe" scripts/LocalJwt.java token .tools/jwt 'AUDIT_WRITE,AUDIT_READ,AUDIT_VERIFY,AUDIT_DOCS' --global
 $headers = @{ Authorization = "Bearer $token" }
 $event = '{"eventType":"READ","actorId":"synthetic-actor","resourceType":"ACCOUNT","resourceId":"synthetic-resource","payload":{"accountNumber":"synthetic-only"}}'
 Invoke-RestMethod http://127.0.0.1:8080/audit/events -Method Post -Headers $headers -ContentType application/json -Body $event
@@ -110,3 +110,11 @@ The requested Boot 4.1.0 baseline is retained with explicit compatible security 
 ## Approved opt-in local Swagger exception
 
 The user selected the proposed H2/localhost workflow without a browser extension. AUDIT_SWAGGER_LOCAL_PUBLIC defaults false. Explicit true permits anonymous GET for Swagger HTML/assets and OpenAPI paths only when server.address is exactly 127.0.0.1, no postgres profile is active and JDBC reports H2. Otherwise startup fails. API permissions, JWT decoder, stateless/header-only authentication, mutation denial and POST/method restrictions are unchanged. No public token-issuing endpoint or cookie/query authentication was introduced. In this mode open the page normally, click Authorize and paste a fresh token without the Bearer prefix; token expiration still applies to API calls. The default documentation policy elsewhere in this document remains the default. See validation/local-swagger.md for tests and live checks.
+
+## Resource assignments (approved follow-up)
+
+See [ADR-010](decisions/ADR-010-resource-authorization-and-evidence.md) for exact claim shapes and route behavior. Signed `audit_resources` accepts at most 100 exact `{resourceType,resourceId}` entries; `audit_global:true` explicitly selects privileged global scope. Wildcards are literal identifiers. Missing assignments deny business calls; malformed claims fail JWT validation. Global scope never grants missing action permissions. ResourceType/resourceId pairs must be collision-free in the issuer's account namespace. Assignment revocation takes effect with new claims/expiry; online token revocation is not implemented.
+
+Query/report cursors bind subject and sorted/deduplicated assignments; pre-follow-up cursors must be restarted. Scoped lookup/redaction hides unassigned IDs with 404; list/export/report filters intersect scope and may return empty results. Retention and full-chain verification require global assignment. Exports retain hash-only bridging headers for other resources, revealing chain positions but no unassigned canonical content. Database/process compromise remains outside this application authorization boundary.
+
+For the existing local walkthrough, append `--global` to the LocalJwt token command. Without it, the helper issues only ACCOUNT/synthetic-resource scope, suitable for the basic append/read example. Regenerate old tokens; tokens containing only AUDIT_* permissions now receive 403 on business calls. Production assignments must come from the trusted issuer, not caller-controlled headers or query filters. The running old demonstration instance must be restarted from a newly built artifact to use these changes; it was not stopped during validation.

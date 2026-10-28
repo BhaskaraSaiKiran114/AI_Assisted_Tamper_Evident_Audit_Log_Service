@@ -1,5 +1,7 @@
 package com.example.auditlog.api;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.io.IOException;
 import java.net.URI;
 
@@ -40,11 +42,11 @@ public class AuditWriteController {
             @ApiResponse(responseCode = "403", description = "Missing permission"),
             @ApiResponse(responseCode = "413", description = "Request exceeds 256 KiB"),
             @ApiResponse(responseCode = "503", description = "Storage unavailable")})
-    public ResponseEntity<AppendReceipt> append(HttpServletRequest request) throws IOException {
+    public ResponseEntity<AppendReceipt> append(HttpServletRequest request, org.springframework.security.core.Authentication authentication) throws IOException {
         if (request.getContentLengthLong() > EventParser.MAX_BYTES) {
             throw new InvalidEventException("Event body exceeds 256 KiB", 413);
         }
-        AppendReceipt receipt = ingestion.append(request.getInputStream().readNBytes(EventParser.MAX_BYTES + 1));
+        AppendReceipt receipt = ingestion.append(request.getInputStream().readNBytes(EventParser.MAX_BYTES + 1), ResourceScope.from(authentication));
         return ResponseEntity.created(URI.create("/audit/events/" + receipt.eventId())).body(receipt);
     }
 }

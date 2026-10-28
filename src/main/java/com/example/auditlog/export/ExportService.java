@@ -1,5 +1,7 @@
 package com.example.auditlog.export;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Clock;
@@ -53,18 +55,22 @@ public class ExportService {
     }
 
     public byte[] export(ExportFilter filter) {
+        return export(filter, ResourceScope.internal());
+    }
+
+    public byte[] export(ExportFilter filter, ResourceScope scope) {
         signer.privateKey();
         if (!permits.tryAcquire()) {
             throw new AuditQueryException(429, "Export capacity exhausted; retry later");
         }
         try {
-            return snapshots.execute(60, () -> build(filter));
+            return snapshots.execute(60, () -> build(filter, scope));
         } finally {
             permits.release();
         }
     }
 
-    private byte[] build(ExportFilter filter) {
+    private byte[] build(ExportFilter filter, ResourceScope scope) {
         var head = repository.head().orElseThrow(this::broken);
         if (head.sequence() < 0 || !head.hash().matches("[0-9a-f]{64}")) {
             throw broken();
@@ -86,7 +92,7 @@ public class ExportService {
                 }
                 checker.check(event);
                 lifecycle.checkEvent(event);
-                boolean include = filter.matches(event);
+                boolean include = scope.permits(event.resourceType(), event.resourceId()) && filter.matches(event);
                 boolean archived = include && lifecycle.archived(event.eventId());
                 include &= filter.includeArchived() || !archived;
                 List<String> paths = include ? lifecycle.redactions(event.eventId()).keySet().stream().sorted().toList() : List.of();

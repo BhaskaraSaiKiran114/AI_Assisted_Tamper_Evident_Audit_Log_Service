@@ -118,3 +118,9 @@ See security-review.md, performance.md, walkthrough.md and validation/milestone-
 ## Follow-up: selected local Swagger workflow
 
 An explicit default-off documentation exception is implemented by security.LocalSwaggerAccess. Only actual H2 plus exact 127.0.0.1 binding and no postgres profile allow anonymous GET of the Swagger/OpenAPI resources. The user selected this proposed local workflow and requested the link after review. Business APIs retain their JWT permissions. This is a documented local documentation-access change, not a public business API or changed cryptographic contract. Validation is in validation/local-swagger.md.
+
+## Approved resource-authorization and evidence follow-up
+
+[ADR-010](decisions/ADR-010-resource-authorization-and-evidence.md) supersedes the earlier service-wide permission assumptions. Trusted issuer resource assignments now constrain business operations independently of action permissions. The global chain/hash bytes/schema/export version remain unchanged. Global operators alone can verify the complete chain or run retention; targeted redaction checks assignments before replay/mutation. SQL-scoped query/report candidates precede pagination/decryption/counting, and query/report cursors include principal/assignment context. Shared heads/proof hashes still reveal global positions; independent tenant chains/DB row isolation are outside scope.
+
+JaCoCo gates, required reference suites and revision/input-bound test artifacts are defined in ADR-010 and the [follow-up validation ledger](validation/functional-gap-remediation.md). Security audit is a separate fail-closed CI job. Human acceptance, final committed revision, remote run and personal affirmation cannot be fabricated by the build.

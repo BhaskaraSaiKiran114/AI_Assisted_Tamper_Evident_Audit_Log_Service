@@ -49,3 +49,9 @@ Default cache is .tools/dependency-check-v13; override audit.security.data-direc
 ## Release ownership
 
 Operational risks above are disclosed, not accepted on the candidate's behalf. Production release requires review of advisory findings/data coverage, intended PostgreSQL patch/image, runtime/migration separation, key/backup/privacy operations, externally retained evidence, tenant/reviewer scope and representative load. Human attestation/acceptance, remote repository privacy/reviewer access and submission remain unsigned/unverified until the owner acts. The prototype's local demonstration does not certify these conditions.
+
+## Approved resource authorization and CI follow-up
+
+ADR-010 supersedes the historical service-wide authorization policy. Exact issuer resource assignments now constrain reads, exports, reports, ingestion and targeted erasure; global verification/retention require explicit global assignment as well as the independent action permission. Same-role/different-resource contracts execute on H2 and the restricted PostgreSQL runtime pool, including cursor/context and pre-replay authorization attacks. The shared-chain head/hash metadata disclosure is documented rather than represented as tenant-private proof.
+
+Measured JaCoCo gates and revision/input-bound artifacts supplement the earlier test ledger. A separate CI dependency-audit job now fails on feed errors and publishes its actual report. Configuring that job is not evidence of a completed remote or fresh local vulnerability scan. Runtime dependencies did not change in this follow-up; JaCoCo is a build plugin. Existing M8 advisory findings/results retain their original timestamps and coverage limits. Candidate acceptance, issuer assignment administration, real key lifecycle and backup operations remain outstanding production/human responsibilities.

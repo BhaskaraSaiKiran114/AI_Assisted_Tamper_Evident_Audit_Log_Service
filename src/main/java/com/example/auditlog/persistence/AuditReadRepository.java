@@ -1,5 +1,7 @@
 package com.example.auditlog.persistence;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -41,8 +43,13 @@ public class AuditReadRepository {
     }
 
     public List<StoredEvent> page(EventQuery query, long after, long upper) {
+        return page(query, after, upper, ResourceScope.internal());
+    }
+
+    public List<StoredEvent> page(EventQuery query, long after, long upper, ResourceScope scope) {
         StringBuilder sql = new StringBuilder("SELECT * FROM audit_event WHERE event_sequence > ? AND event_sequence <= ?");
         List<Object> parameters = new ArrayList<>(List.of(after, upper));
+        scope.constrain(sql, parameters);
         if (!query.includeArchived()) {
             sql.append(" AND NOT EXISTS (SELECT 1 FROM event_archive a WHERE a.event_id = audit_event.event_id)");
         }
@@ -83,11 +90,16 @@ public class AuditReadRepository {
     }
 
     public Stream<StoredEvent> accessCandidates(AccessReportQuery query, long after, long upper, int scanLimit) {
+        return accessCandidates(query, after, upper, scanLimit, ResourceScope.internal());
+    }
+
+    public Stream<StoredEvent> accessCandidates(AccessReportQuery query, long after, long upper, int scanLimit, ResourceScope scope) {
         StringBuilder sql = new StringBuilder("SELECT * FROM audit_event WHERE event_sequence > ? AND event_sequence <= ? "
                 + "AND resource_type = 'CLIENT_ACCOUNT' AND event_type IN ('READ', 'UPDATE', 'EXPORT') "
                 + "AND occurred_at >= ? AND occurred_at < ?");
         List<Object> parameters = new ArrayList<>(List.of(after, upper, OffsetDateTime.ofInstant(query.from(), ZoneOffset.UTC),
                 OffsetDateTime.ofInstant(query.to(), ZoneOffset.UTC)));
+        scope.constrain(sql, parameters);
         filter(sql, parameters, "actor_id", query.actorId());
         filter(sql, parameters, "resource_id", query.accountId());
         filter(sql, parameters, "event_type", query.action());

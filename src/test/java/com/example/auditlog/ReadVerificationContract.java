@@ -283,7 +283,11 @@ abstract class ReadVerificationContract {
     @Test
     void standaloneApiReturnsVerificationResultsAndSafeOperationalErrors() throws Exception {
         MockMvc mvc = MockMvcBuilders.standaloneSetup(new AuditReadController(queries, verification))
-                .setControllerAdvice(new EventErrorHandler()).build();
+                .setControllerAdvice(new EventErrorHandler())
+                .defaultRequest(get("/").principal(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(
+                        org.springframework.security.oauth2.jwt.Jwt.withTokenValue("synthetic").header("alg", "RS256")
+                                .subject("contract-operator").claim("audit_global", true).build(), java.util.List.of())))
+                .build();
         var receipt = append("alice", "ACCOUNT", "a1", "READ", "2020-01-01T00:00:00Z");
         mvc.perform(get("/audit/events").param("actorId", "alice"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.events[0].eventId").value(receipt.eventId().toString()));

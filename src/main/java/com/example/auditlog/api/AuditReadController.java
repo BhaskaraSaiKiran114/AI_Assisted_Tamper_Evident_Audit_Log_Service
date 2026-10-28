@@ -1,5 +1,7 @@
 package com.example.auditlog.api;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.util.UUID;
 
 import com.example.auditlog.audit.AuditQueryService;
@@ -49,7 +51,7 @@ public class AuditReadController {
             @Parameter(hidden = true) Authentication authentication) {
         EventQuery query = EventQuery.parse(parameters);
         archivePermission(query.includeArchived(), authentication);
-        return queries.query(query);
+        return queries.query(query, ResourceScope.from(authentication));
     }
 
     @GetMapping("/events/{eventId}")
@@ -72,13 +74,15 @@ public class AuditReadController {
         } catch (IllegalArgumentException exception) {
             throw new InvalidEventException("eventId must be a UUID");
         }
-        return queries.find(id, includeArchived);
+        return queries.find(id, includeArchived, ResourceScope.from(authentication));
     }
 
     @GetMapping("/verify")
     @Operation(summary = "Verify the full chain", description = "Requires AUDIT_VERIFY. No filters. "
             + "200 reports intact or broken with first inconsistency; execution failures are 503, never intact=true.")
-    public VerificationResult verify(@Parameter(hidden = true) @RequestParam MultiValueMap<String, String> parameters) {
+    public VerificationResult verify(@Parameter(hidden = true) @RequestParam MultiValueMap<String, String> parameters,
+            @Parameter(hidden = true) Authentication authentication) {
+        ResourceScope.from(authentication).requireGlobal();
         if (!parameters.isEmpty()) {
             throw new InvalidEventException("Verification does not accept filters");
         }

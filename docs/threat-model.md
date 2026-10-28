@@ -46,3 +46,7 @@ Account/actor metadata remains sensitive and non-erasable by field-key removal. 
 ## M8 review disposition
 
 Focused source review, real HTTP/runtime-role scenarios, bounded offline-file read hardening, compatible dependency remediation and a fresh 13.0.0 advisory import are recorded in security-review.md and validation/milestone-8.md. The measured baseline is in performance.md. No project-specific suppression/error bypass was added; missing OSS Index credentials and mirror freshness constrain scan coverage. Existing operational/privacy/trust risks remain disclosed rather than accepted on the owner's behalf. Human review, production patch/key/backup/tenant operations and externally retained checkpoints are not established by the local tests.
+
+## Resource-scope follow-up threat boundary
+
+ADR-010 supersedes historical statements that this service has no resource authorization. Verified issuer assignments now prevent a same-permission caller from reading/exporting/reporting or modifying another resource's lifecycle data. Resource names are exact pairs, not tenant identity attestation. Only explicit global operators can run store-wide retention/verification; global claims remain a privileged issuer trust decision. SQL candidate filtering and scope-bound cursors resist guessed-ID/filter/cursor attacks. No physical tenant DB separation, online JWT revocation or tenant-private chain-head/proof metadata is claimed. The earlier KMS/backup/WAL/upstream/global-rewrite limits remain.

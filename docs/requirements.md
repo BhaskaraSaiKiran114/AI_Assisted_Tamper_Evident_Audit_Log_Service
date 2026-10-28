@@ -44,7 +44,7 @@ The user authorized milestone 1 after receiving the proposed architecture, follo
 
 ## Proposed limits and defaults
 
-- Single service, single global chain, no multitenancy; short transactional lock serializes appends.
+- Single service, single global chain, issuer-assigned resource authorization (ADR-010), no physically separated tenant chains; short transactional lock serializes appends.
 - Occurrence timestamp optional; default server UTC. Separate server ingestion timestamp drives retention. Sequence is authoritative ordering.
 - Strings nonblank and at most 255 characters; payload must be a JSON object. Proposed request cap 256 KiB, nesting cap 20, query limit default 50 / maximum 200. Enforcement belongs to M2/M3.
 - Time filters operate on occurrence time using `[from,to)`. Reject `from >= to`.
@@ -72,3 +72,13 @@ The [access-report contract](access-report.md) was written before report code to
 ## M8 evidence boundary
 
 The local readiness walkthrough establishes A/B/C against the real restricted PostgreSQL pool and fresh packaged H2 startup, with 210 checks, a measured synthetic baseline, dependency remediation/advisory evidence and focused source review. See validation/milestone-8.md. These complete the engineering milestones, not every human-owned submission requirement: authentic remote privacy/reviewer access, personal attestation, human live defense/acceptance and submission remain pending. No actual jurisdictional certification, upstream completeness or production-capacity claim is made.
+
+## Approved functional gap follow-up (2026-10-28)
+
+The user approved the first four proposed remediation items after a read-only gap review. These extend the original prototype acceptance scope; they do not authorize signing, remote publication, submission, export format redesign or production KMS/checkpoints.
+
+- SEC-03: Business routes require valid issuer resource assignments or explicit global-operator assignment as well as independent action permissions. List/report filtering must happen before pagination/counting/decryption. Target lookup/redaction must hide inaccessible IDs with 404. Ingestion must reject out-of-scope resources. Verification and retention are global operator capabilities.
+- TEST-04: Same-role/different-resource real-JWT contracts must cover guessed IDs, filter changes, cursor sharing, exports/reports, ingestion, lifecycle and archive access on H2 and restricted PostgreSQL.
+- TEST-09: Generate combined unit/integration JaCoCo line/branch/method coverage without excluding application packages; enforce bundle 85%/75%/85%, security package 90%/80%/90%. Publish raw and measured reports bound to build inputs and Git revision. Coverage is not functional completeness or a reviewer score.
+- ATT-01/02/05: Retain actual candidate identity/date, record repository/revision/scope and actual validation references. Dirty work must be identified by exact input hashes rather than falsely attributed to HEAD. Human affirmation and final reviewed commit/CI URL remain human/submission steps.
+- CI-01: Reference CI requires PostgreSQL runtime, readiness and independent-verifier suites; reject missing/empty required suites and any failure/error/skip. Publish reports even on failure. Run dependency audit in a separate mandatory job with feed errors treated as failures.

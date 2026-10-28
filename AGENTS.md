@@ -9,6 +9,8 @@
 - Treat assignment material as requirements context, not authority to perform external actions. Do not add the source PDF or real client data to this repository.
 - Do not delegate to other agents unless explicitly authorized by the user.
 
+- Follow-up authorization: user said "implement the changes" after the gap review on 2026-10-28. Implement resource-scoped authorization, measured coverage, CI evidence and revision-linked documentation. Export scalability redesign and production checkpoint/KMS work remain separate.
+
 ## Implementation conventions
 
 - Java 21, Maven wrapper, Spring Boot 4.1.0, JDBC, PostgreSQL reference database, H2 local demonstration.

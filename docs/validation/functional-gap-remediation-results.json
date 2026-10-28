@@ -1,0 +1,302 @@
+{
+  "generatedAt": "2026-10-28T17:31:32.705833+00:00",
+  "repository": "https://github.com/BhaskaraSaiKiran114/AI_Assisted_Tamper_Evident_Audit_Log_Service.git",
+  "baseCommit": "7d2dc71a7f2cc67569b514d496cde41422244a50",
+  "branch": "main",
+  "dirty": true,
+  "buildInputsSha256": "e9129126ab4773b0007770fa02752a5319e0d264883b8d0c606a08e78983ebf5",
+  "referenceProfile": true,
+  "tests": {
+    "tests": 238,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": {
+    "com.example.auditlog.AccessReportIntegrationTest": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.AccessReportQueryTest": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.AccessReportSecurityIntegrationTest": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.audit.CanonicalJsonTest": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.audit.EventParserTest": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.audit.EventQueryTest": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.audit.PayloadProtectorTest": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.audit.QueryCursorCodecTest": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.ExportBundleTest": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.ExportIntegrationTest": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.ExportSecurityIntegrationTest": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.FoundationIntegrationTest": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.IngestionIntegrationTest": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.JwtConfigurationTest": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.LifecycleIntegrationTest": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.LifecycleRequestTest": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.LifecycleSecurityIntegrationTest": {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.LocalSwaggerAccessTest": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.LocalSwaggerIntegrationTest": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.ReadVerificationIntegrationTest": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.ResourceAuthorizationIntegrationTest": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.ResourceScopeTest": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.SecurityIntegrationTest": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresAccessReportIT": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresAccessReportRuntimeIT": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresAppendIT": {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresExportIT": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresExportRuntimeIT": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresLifecycleIT": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresLifecycleRuntimeIT": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresReadinessExercise": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresReadVerificationIT": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresResourceAuthorizationIT": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.PostgresRuntimeSecurityIT": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "com.example.auditlog.VerifierArtifactIT": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "coverage": {
+    "INSTRUCTION": {
+      "covered": 9619,
+      "missed": 527,
+      "percent": 94.8058
+    },
+    "BRANCH": {
+      "covered": 836,
+      "missed": 210,
+      "percent": 79.9235
+    },
+    "LINE": {
+      "covered": 1467,
+      "missed": 86,
+      "percent": 94.4623
+    },
+    "COMPLEXITY": {
+      "covered": 611,
+      "missed": 214,
+      "percent": 74.0606
+    },
+    "METHOD": {
+      "covered": 290,
+      "missed": 11,
+      "percent": 96.3455
+    },
+    "CLASS": {
+      "covered": 64,
+      "missed": 2,
+      "percent": 96.9697
+    }
+  },
+  "artifacts": {
+    "surefire-reports/TEST-com.example.auditlog.AccessReportIntegrationTest.xml": "c42f09df7f9149584fa0452239d48fef9a1e8fda0c46d6cbfe661e9d5571919d",
+    "surefire-reports/TEST-com.example.auditlog.AccessReportQueryTest.xml": "d2a0d86ca0642158144000901d4ccbf937b276dfacfc43ad4c4e4f380d51c39c",
+    "surefire-reports/TEST-com.example.auditlog.AccessReportSecurityIntegrationTest.xml": "3d0ca470bb5db1d040ec1340646800a7964249fba4aad12a65bb9438a7b9dc97",
+    "surefire-reports/TEST-com.example.auditlog.audit.CanonicalJsonTest.xml": "6b2f35beeb727546b190eed9ed1bb84e685f1e95e27f2d1f3457ed1f58002389",
+    "surefire-reports/TEST-com.example.auditlog.audit.EventParserTest.xml": "e07e4af8fd4c3075d61b096676f0197a876c63c58e3d0f7ad859cf4239ea35f3",
+    "surefire-reports/TEST-com.example.auditlog.audit.EventQueryTest.xml": "b0b877998f8c577e5a4f9d1e2ca2579f1c8de300b83dbffd0b5ca161785f57e9",
+    "surefire-reports/TEST-com.example.auditlog.audit.PayloadProtectorTest.xml": "5f0209289747311386e9663969c2cc02d30f5fd0e0a5dbafc3b874d3ca0d7b6f",
+    "surefire-reports/TEST-com.example.auditlog.audit.QueryCursorCodecTest.xml": "94e73ff38d80cd13e0212fb20e9dc932031eafbd5711baacd1b52817f0daebcb",
+    "surefire-reports/TEST-com.example.auditlog.ExportBundleTest.xml": "09a467f39cac72e200f06d62f4928a7bbb34e113fc661ac997df14cc7be11f87",
+    "surefire-reports/TEST-com.example.auditlog.ExportIntegrationTest.xml": "28db25e66991007055467b74882c35302f41e8eddf64def7f4f90151f036a290",
+    "surefire-reports/TEST-com.example.auditlog.ExportSecurityIntegrationTest.xml": "40ba63d4b0833b723990622814216d968e6ef34139f01b842b9568b083694470",
+    "surefire-reports/TEST-com.example.auditlog.FoundationIntegrationTest.xml": "2cb089541652aed55d7312a72ad435b900f6e739d2c23802c5ad4615e3a84ec7",
+    "surefire-reports/TEST-com.example.auditlog.IngestionIntegrationTest.xml": "c97186f5872e88a422dfe6d73c548c046ed37c7a7fa24aeb64094e04eae6fdee",
+    "surefire-reports/TEST-com.example.auditlog.JwtConfigurationTest.xml": "258ccad3ebb204f645ddba8bbfae4f8ff8c2ce5dbb62b38b0422e84e66089adb",
+    "surefire-reports/TEST-com.example.auditlog.LifecycleIntegrationTest.xml": "bdbd7f8a871f2033a8a3d1a78db22fd4ba9ddacecb2c8e96b660158c5c518d22",
+    "surefire-reports/TEST-com.example.auditlog.LifecycleRequestTest.xml": "fff0ee173275db445423ab508e78c645daa73f56f9638aafca040788f6989dd5",
+    "surefire-reports/TEST-com.example.auditlog.LifecycleSecurityIntegrationTest.xml": "93474bf41adb7826508914b263a7fd9fde3fe86734bd647f57279367624caa47",
+    "surefire-reports/TEST-com.example.auditlog.LocalSwaggerAccessTest.xml": "c92c8be8d5b221ec1ee6c50ebe994127e5e11297d428057eeed012e9dd6367e2",
+    "surefire-reports/TEST-com.example.auditlog.LocalSwaggerIntegrationTest.xml": "16c8d4108d9cd3aae84a89109e0b0fe9b27dc5d1f3dd57b2acfc96c40f0fbf2a",
+    "surefire-reports/TEST-com.example.auditlog.ReadVerificationIntegrationTest.xml": "ee04e1a7aa7f0475a9671fc40e4c797588b057b1907340997be3de81f8f03fb5",
+    "surefire-reports/TEST-com.example.auditlog.ResourceAuthorizationIntegrationTest.xml": "0a80fe50edf4b8cfe237d31d07cc93a53cbac123a27289827b6b962cbedd35ce",
+    "surefire-reports/TEST-com.example.auditlog.ResourceScopeTest.xml": "78cd206297d5370147004ec7c2d7cf757e61e5fd458de9b3135f1a362825b6e2",
+    "surefire-reports/TEST-com.example.auditlog.SecurityIntegrationTest.xml": "812a737485b9c11634f41d8fba470a6e8f44eeeafc20af59e34aebcd37de6d3b",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresAccessReportIT.xml": "1571a66e08a6582f2f55fa7729756a576ff94013ae90589722c9e8723f676a82",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresAccessReportRuntimeIT.xml": "db28b3944dece06a7e2ed33dd419ef363ac75d3e6036f52aef74876b26a1acdd",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresAppendIT.xml": "13ee0a33a1bc1293ca4e5b746584772303d5b9613f170ab437ff8d4b727d73a0",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresExportIT.xml": "b55d66ac34636024edd9ae0b8f6d0018c5c2af8b39e36fee07ca9a272c251680",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresExportRuntimeIT.xml": "aee7ecf30a0e5e5d4223fa40dd66a42651e3c23872a5b27c6bedfb469152ad06",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresLifecycleIT.xml": "868d083d3970f86e442e060467b4140869b987fa02e74adb5596bf4e7ebb9c03",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresLifecycleRuntimeIT.xml": "b493d993098bad1df027f40e90b13861e7c4006010e3b99e94533b66ef588aaf",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresReadinessExercise.xml": "52e252920f9c8dc57d8c2a85369afde44a8c9900c8e4bfd6659bb46f7161eb53",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresReadVerificationIT.xml": "411b7024842033d90e9d1ee43107cbbaba44ef24b42056b7f2d6a48d4610478b",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresResourceAuthorizationIT.xml": "d0de93fd086994d704a569b9778e7152b30dbad8653f74ed85509569e179a7a4",
+    "failsafe-reports/TEST-com.example.auditlog.PostgresRuntimeSecurityIT.xml": "af72cf9eb703bdd7a98ae37b8a732ddce0f314cae4551009ab1e7adcfcf4038c",
+    "failsafe-reports/TEST-com.example.auditlog.VerifierArtifactIT.xml": "a169e7bff7cd37f12b81eb8a06416def15b5c8de628e5c9bb1eb7435de96b40b",
+    "site/jacoco/jacoco.xml": "f11aa63709580232d8cfb577e6a16da1e16d8b882389ccbf161cf960e3ce4a30",
+    "readiness/packaged-start-result.json": "2969bc5b33af79c7d3bcb86e4a1351febef35ac513fc816f9fb1919634120f55",
+    "readiness/performance.json": "6f5aea227f2b415d0503191fca34a883900b7a8c0b351d15b875c2ad5ff52194",
+    "readiness/scenario-result.json": "f334bc452d7efeaaf3061032f17ae68e56a1aeb890358327a31ea3788b678524"
+  },
+  "ciRunUrl": null,
+  "humanAffirmation": "Not provided by this script; candidate review and affirmation required"
+}

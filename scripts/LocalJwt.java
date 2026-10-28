@@ -25,7 +25,7 @@ class LocalJwt {
 
     public static void main(String[] arguments) throws Exception {
         if (arguments.length < 2) {
-            throw new IllegalArgumentException("Usage: init|token .tools/jwt [comma-separated permissions]");
+            throw new IllegalArgumentException("Usage: init|token .tools/jwt [comma-separated permissions] [--global]");
         }
         Path directory = Path.of(arguments[1]).toAbsolutePath().normalize();
         Path allowed = Path.of(".tools").toAbsolutePath().normalize();
@@ -59,24 +59,31 @@ class LocalJwt {
             Files.writeString(publicFile, Base64.getEncoder().encodeToString(keys.getPublic().getEncoded()),
                     StandardOpenOption.CREATE_NEW);
             System.out.println("Developer keys created under ignored .tools; restrict access and keep the private key local.");
-        } else if (arguments[0].equals("token") && arguments.length == 3) {
+        } else if (arguments[0].equals("token") && (arguments.length == 3 || arguments.length == 4)) {
             var permissions = Arrays.stream(arguments[2].split(",", -1)).toList();
             if (permissions.isEmpty() || !PERMISSIONS.containsAll(permissions)) {
                 throw new IllegalArgumentException("Only documented AUDIT_* permissions are allowed");
+            }
+            String scope = "\"audit_resources\":[{\"resourceType\":\"ACCOUNT\",\"resourceId\":\"synthetic-resource\"}]";
+            if (arguments.length == 4) {
+                if (!arguments[3].equals("--global")) {
+                    throw new IllegalArgumentException("Only explicit --global operator mode is supported");
+                }
+                scope = "\"audit_global\":true";
             }
             var privateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder()
                     .decode(Files.readString(directory.resolve("private-key-base64.txt")).trim())));
             long now = Instant.now().getEpochSecond();
             String claims = "{\"iss\":\"urn:audit-log:local\",\"aud\":[\"audit-log-service\"],\"sub\":\"local-developer\","
                     + "\"iat\":" + now + ",\"nbf\":" + now + ",\"exp\":" + (now + 300) + ",\"permissions\":["
-                    + String.join(",", permissions.stream().map(p -> "\"" + p + "\"").toList()) + "]}";
+                    + String.join(",", permissions.stream().map(p -> "\"" + p + "\"").toList()) + "]," + scope + "}";
             String unsigned = encode("{\"alg\":\"RS256\",\"typ\":\"JWT\"}") + "." + encode(claims);
             Signature signer = Signature.getInstance("SHA256withRSA");
             signer.initSign(privateKey);
             signer.update(unsigned.getBytes(StandardCharsets.US_ASCII));
             System.out.println(unsigned + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(signer.sign()));
         } else {
-            throw new IllegalArgumentException("Usage: init|token .tools/jwt [comma-separated permissions]");
+            throw new IllegalArgumentException("Usage: init|token .tools/jwt [comma-separated permissions] [--global]");
         }
     }
 

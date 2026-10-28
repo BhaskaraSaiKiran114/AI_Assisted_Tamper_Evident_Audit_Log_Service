@@ -128,7 +128,7 @@ Normal package also creates target/audit-log-service-0.1.0-SNAPSHOT-verifier.jar
 Only CLIENT_ACCOUNT READ/UPDATE/EXPORT with plaintext payload.outcome SUCCESS/DENIED/FAILURE are reportable. Unsupported/protected outcomes are excluded and counted, never inferred or decrypted. Responses contain only eventId/sequence, actorId/accountId, action/outcome, occurredAt and archived. No payload or field keys are returned. Producer assertions and missing upstream activity cannot be certified. Per-page scan/exclusion counts include lookahead and are not period totals; use M6 separately for signed exports. Defaults cap candidate scans at 1000 and concurrent reports at two; excess fails without partial output.
 
 ```powershell
-$reportToken = & "$env:JAVA_HOME\bin\java.exe" scripts/LocalJwt.java token .tools/jwt 'AUDIT_COMPLIANCE'
+$reportToken = & "$env:JAVA_HOME\bin\java.exe" scripts/LocalJwt.java token .tools/jwt 'AUDIT_COMPLIANCE' --global
 $reportHeaders = @{ Authorization = "Bearer $reportToken" }
 Invoke-RestMethod 'http://127.0.0.1:8080/audit/compliance/access-report?from=2026-10-01T00:00:00Z&to=2026-10-02T00:00:00Z&accountId=synthetic-account' -Headers $reportHeaders
 ```
@@ -150,3 +150,9 @@ Optional Python 3 hygiene: python scripts/check-deliverables.py scans non-ignore
 ## Optional H2/localhost Swagger mode
 
 Set AUDIT_SWAGGER_LOCAL_PUBLIC=true when running H2 bound to 127.0.0.1, then restart/build the application. Swagger HTML/assets and the OpenAPI spec can load anonymously in that explicit mode; use Authorize with a fresh JWT for API requests. Enabling it with a non-loopback bind, postgres profile or actual non-H2 datasource fails startup. Default false retains AUDIT_DOCS protection. All business API permissions stay enforced. See [local Swagger validation](docs/validation/local-swagger.md). A separate verified development instance was started on port 8081 with an empty ephemeral H2 store, leaving the existing port-8080 instance running.
+
+## Resource assignments and measured validation
+
+Business tokens now require issuer-signed `audit_resources` assignments or explicit `audit_global:true`, as well as their existing permissions. Old permission-only tokens receive 403. For the full local demo, add `--global` to `scripts/LocalJwt.java token .tools/jwt '<permissions>'`; without it the helper is limited to ACCOUNT/synthetic-resource. Only global operators can run full-chain verification or retention. See [authorization contract](docs/decisions/ADR-010-resource-authorization-and-evidence.md).
+
+`clean verify` now enforces JaCoCo coverage and writes `target/site/jacoco/index.html` plus XML under target/site/jacoco. Reference CI additionally runs PostgreSQL/readiness and a separate dependency audit, publishing commit/run-bound evidence. See [follow-up validation](docs/validation/functional-gap-remediation.md) for actual local results and the remaining human-owned submission steps. Restart the application from a newly built artifact to activate these changes; existing running demo services were not replaced.

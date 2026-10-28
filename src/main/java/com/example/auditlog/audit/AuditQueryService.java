@@ -1,5 +1,7 @@
 package com.example.auditlog.audit;
 
+import com.example.auditlog.security.ResourceScope;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -39,10 +41,14 @@ public class AuditQueryService {
     }
 
     public EventPage query(EventQuery query) {
-        return snapshots.execute(30, () -> querySnapshot(query));
+        return query(query, ResourceScope.internal());
     }
 
-    private EventPage querySnapshot(EventQuery query) {
+    public EventPage query(EventQuery query, ResourceScope scope) {
+        return snapshots.execute(30, () -> querySnapshot(query, scope));
+    }
+
+    private EventPage querySnapshot(EventQuery query, ResourceScope scope) {
         Position position;
         if (query.cursor() == null) {
             ChainHead head = repository.head().orElseThrow(() -> new AuditQueryException(503, "Chain head unavailable"));
@@ -51,17 +57,18 @@ public class AuditQueryService {
             }
             position = new Position(0, head.sequence(), head.hash());
         } else {
-            position = cursors.decode(query.cursor(), query);
+            position = cursors.decode(query.cursor(), "AUDIT-SCOPED-QUERY-V1", scope.context(query.fingerprintFields()));
         }
         if (position.upper() > 0 && !repository.hashAt(position.upper()).orElse("").equals(position.headHash())
                 || position.upper() == 0 && !position.headHash().equals("0".repeat(64))) {
             throw new AuditQueryException(409, "Pagination snapshot is no longer available");
         }
-        List<StoredEvent> rows = repository.page(query, position.after(), position.upper());
+        List<StoredEvent> rows = repository.page(query, position.after(), position.upper(), scope);
         boolean more = rows.size() > query.limit();
         List<StoredEvent> selected = rows.subList(0, Math.min(rows.size(), query.limit()));
         List<EventView> events = selected.stream().map(this::view).toList();
-        String next = more ? cursors.encode(new Position(selected.getLast().sequence(), position.upper(), position.headHash()), query)
+        String next = more ? cursors.encode(new Position(selected.getLast().sequence(), position.upper(), position.headHash()),
+                "AUDIT-SCOPED-QUERY-V1", scope.context(query.fingerprintFields()))
                 : null;
         return new EventPage(events, query.limit(), next, new ChainHead(position.upper(), position.headHash()));
     }
@@ -71,7 +78,12 @@ public class AuditQueryService {
     }
 
     public EventView find(UUID id, boolean includeArchived) {
+        return find(id, includeArchived, ResourceScope.internal());
+    }
+
+    public EventView find(UUID id, boolean includeArchived, ResourceScope scope) {
         return snapshots.execute(30, () -> view(repository.find(id)
+                .filter(event -> scope.permits(event.resourceType(), event.resourceId()))
                 .filter(event -> includeArchived || !lifecycle.archived(event.eventId()))
                 .orElseThrow(() -> new AuditQueryException(404, "Audit event not found"))));
     }

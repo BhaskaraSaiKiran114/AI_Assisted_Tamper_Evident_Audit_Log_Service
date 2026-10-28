@@ -49,6 +49,9 @@ final class PostgresFixture {
         registry.add("spring.datasource.url", () -> System.getenv("AUDIT_TEST_DB_URL"));
         registry.add("spring.datasource.username", () -> runtime ? "audit_runtime" : System.getenv("AUDIT_TEST_DB_USERNAME"));
         registry.add("spring.datasource.password", () -> runtime ? RUNTIME_PASSWORD : System.getenv("AUDIT_TEST_DB_PASSWORD"));
+        // Many cached Spring contexts share the disposable server; do not allocate ten idle connections per fixture.
+        registry.add("spring.datasource.hikari.maximum-pool-size", () -> "4");
+        registry.add("spring.datasource.hikari.minimum-idle", () -> "1");
         registry.add("spring.flyway.url", () -> System.getenv("AUDIT_TEST_DB_URL"));
         registry.add("spring.flyway.user", () -> "audit_migrator");
         registry.add("spring.flyway.password", () -> MIGRATION_PASSWORD);

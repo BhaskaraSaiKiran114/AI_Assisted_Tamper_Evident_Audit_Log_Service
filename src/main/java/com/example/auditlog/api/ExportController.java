@@ -1,5 +1,7 @@
 package com.example.auditlog.api;
 
+import com.example.auditlog.security.ResourceScope;
+
 import com.example.auditlog.export.ExportFilter;
 import com.example.auditlog.export.ExportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +45,6 @@ public class ExportController {
             throw new AccessDeniedException("Archived export requires lifecycle permission");
         }
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"audit-export.zip\"")
-                .body(service.export(filter));
+                .body(service.export(filter, ResourceScope.from(authentication)));
     }
 }

@@ -25,7 +25,8 @@ public class OpenApiConfiguration {
     OpenAPI auditOpenApi() {
         return new OpenAPI().info(new Info().title("Audit Log Service").version("0.1.0")
                         .description("Append-only audit API. Explicit permissions are required; issuer identity attests the producer, "
-                                + "not the truth of a producer-supplied actorId. Queries restore protected values. "
+                                + "not the truth of a producer-supplied actorId. Business calls also require issuer-signed audit_resources assignments "
+                                + "or explicit audit_global=true. Verification and retention require global scope. Queries restore protected values. "
                                 + "Verification checks stored commitments; intact=false is a successful integrity report."))
                 .schemaRequirement("bearerAuth", new SecurityScheme().type(SecurityScheme.Type.HTTP)
                         .scheme("bearer").bearerFormat("JWT RS256"))
@@ -52,6 +53,8 @@ public class OpenApiConfiguration {
                 throw new IllegalStateException("New API operations need an explicit documented permission");
             }
             operation.addExtension("x-required-permission", permission);
+            operation.addExtension("x-resource-authorization", path.equals("/audit/verify") || path.equals("/audit/retention/runs")
+                    ? "audit_global=true" : "audit_resources exact resourceType/resourceId assignments or audit_global=true");
             if (method.name().equals("GET") && (path.startsWith("/audit/events") || path.equals("/audit/exports")
                     || permission.equals("AUDIT_COMPLIANCE"))) {
                 operation.addExtension("x-include-archived-permission", "AUDIT_LIFECYCLE");

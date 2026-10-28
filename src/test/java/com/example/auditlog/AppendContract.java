@@ -158,7 +158,12 @@ abstract class AppendContract {
     void mvcContractCreatesReceiptsRejectsInvalidAndOversizedBodiesAndHasNoMutationRoute() throws Exception {
         // Standalone adapter contract, deliberately no application SecurityFilterChain bypass/profile.
         MockMvc mvc = MockMvcBuilders.standaloneSetup(new AuditWriteController(ingestion))
-                .setControllerAdvice(new EventErrorHandler()).build();
+                .setControllerAdvice(new EventErrorHandler())
+                .defaultRequest(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/")
+                        .principal(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(
+                                org.springframework.security.oauth2.jwt.Jwt.withTokenValue("synthetic").header("alg", "RS256")
+                                        .subject("contract-operator").claim("audit_global", true).build(), java.util.List.of())))
+                .build();
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/audit/events")
                         .contentType("application/json").content(EVENT))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())

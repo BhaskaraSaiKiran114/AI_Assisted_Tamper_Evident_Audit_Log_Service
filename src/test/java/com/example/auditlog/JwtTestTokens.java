@@ -43,6 +43,7 @@ final class JwtTestTokens {
         claims.put("nbf", now - 5);
         claims.put("exp", now + 300);
         claims.put("permissions", List.of(permissions));
+        claims.put("audit_global", true);
         return claims;
     }
 
