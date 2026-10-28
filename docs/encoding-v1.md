@@ -45,7 +45,7 @@ Field keys are wrapped by another AES-256-GCM operation under a master key suppl
 
 AUDIT_MASTER_KEY_BASE64 must decode to 32 bytes for PostgreSQL. H2 permits an ephemeral master key in application memory because its store is disposable. Production startup must not enable that convenience for persistent data. Back up a real master key securely outside Git/database and preserve it across restarts. A database-only attacker sees wrapped keys but not the master key. Application-process compromise and combined key/database backup compromise remain risks; this is not a KMS.
 
-M5 will remove individual wrapped-key rows and add audited redaction semantics. M2 does not expose redaction, key rotation or decryption HTTP operations. Backups/prior exports still constrain erasure claims.
+M5 removes individual wrapped-key rows with audited redaction semantics; see lifecycle.md. Canonical event encoding remains v1; only query cursors advance to v2. Key rotation is not implemented. Backups/prior exports still constrain erasure claims.
 
 ## Transaction and API boundaries
 
@@ -53,4 +53,4 @@ Validate/protect input first; lock singleton chain_head with SELECT FOR UPDATE i
 
 Controller success returns 201 with Location and receipt (eventId, sequence, timestamp, ingestedAt, previousHash, recordHash). Validation returns safe problem details (400, or 413 for body size). No PUT/PATCH/DELETE handler exists. M4 now enables business HTTP with explicit JWT permissions; both standalone and real-filter tests establish behavior without a permissive profile. M3 lookup at the receipt Location requires AUDIT_READ.
 
-M3 implements query/full-chain verification as specified in `query-verification.md`; M4 adds PostgreSQL runtime grants and JWT/OpenAPI behavior in `security-and-api.md`. External checkpoints, redaction and export remain later milestones. Append does not run an O(n) integrity scan before each write.
+M3 implements query/full-chain verification as specified in `query-verification.md`; M4 adds PostgreSQL runtime grants and JWT/OpenAPI behavior in `security-and-api.md`. M5 adds audited redaction without rewriting committed event bytes; external checkpoints and export remain later milestones. Append does not run an O(n) integrity scan before each write.

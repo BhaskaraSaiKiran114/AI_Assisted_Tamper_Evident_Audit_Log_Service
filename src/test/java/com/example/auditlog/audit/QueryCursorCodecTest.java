@@ -25,6 +25,9 @@ class QueryCursorCodecTest {
         assertThatThrownBy(() -> codec.decode(cursor,
                 new EventQuery("actor", null, null, null, null, null, 3, null)))
                 .isInstanceOf(InvalidEventException.class);
+        assertThatThrownBy(() -> codec.decode(cursor,
+                new EventQuery("actor", null, null, null, null, null, 2, null, true)))
+                .isInstanceOf(InvalidEventException.class);
     }
 
     @Test

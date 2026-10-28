@@ -68,6 +68,9 @@ abstract class ReadVerificationContract {
     @BeforeEach
     void resetDisposableStore() {
         reset(repository);
+        jdbc.update("DELETE FROM payload_redaction");
+        jdbc.update("DELETE FROM event_archive");
+        jdbc.update("DELETE FROM lifecycle_action");
         jdbc.update("DELETE FROM payload_key");
         jdbc.update("DELETE FROM audit_event");
         jdbc.update("DELETE FROM chain_head");

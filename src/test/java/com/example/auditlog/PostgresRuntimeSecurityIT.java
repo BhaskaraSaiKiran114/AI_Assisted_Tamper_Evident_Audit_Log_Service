@@ -39,6 +39,9 @@ class PostgresRuntimeSecurityIT {
     @BeforeEach
     void clearOnlyIsolatedFixtureWithAdminConnection() throws SQLException {
         try (var connection = PostgresFixture.admin(); var statement = connection.createStatement()) {
+            statement.executeUpdate("DELETE FROM payload_redaction");
+            statement.executeUpdate("DELETE FROM event_archive");
+            statement.executeUpdate("DELETE FROM lifecycle_action");
             statement.executeUpdate("DELETE FROM payload_key");
             statement.executeUpdate("DELETE FROM audit_event");
             statement.executeUpdate("UPDATE chain_head SET last_sequence = 0, last_hash = '" + "0".repeat(64) + "'");

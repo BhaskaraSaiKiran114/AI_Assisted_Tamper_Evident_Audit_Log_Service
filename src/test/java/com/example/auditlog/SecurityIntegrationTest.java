@@ -62,6 +62,9 @@ class SecurityIntegrationTest {
     @BeforeEach
     void resetIsolatedStore() {
         reset(repository);
+        jdbc.update("DELETE FROM payload_redaction");
+        jdbc.update("DELETE FROM event_archive");
+        jdbc.update("DELETE FROM lifecycle_action");
         jdbc.update("DELETE FROM payload_key");
         jdbc.update("DELETE FROM audit_event");
         jdbc.update("UPDATE chain_head SET last_sequence = 0, last_hash = ?", "0".repeat(64));
@@ -224,7 +227,8 @@ class SecurityIntegrationTest {
                 "AUDIT_LIFECYCLE", "AUDIT_EXPORT", "AUDIT_COMPLIANCE");
         mvc.perform(put("/audit/events").header("Authorization", token)).andExpect(status().isForbidden());
         mvc.perform(delete("/audit/events").header("Authorization", token)).andExpect(status().isForbidden());
-        mvc.perform(post("/audit/retention/runs").header("Authorization", token)).andExpect(status().isForbidden());
+        mvc.perform(post("/audit/retention/runs").header("Authorization", token).contentType("application/json").content("{}"))
+                .andExpect(status().isBadRequest());
         mvc.perform(get("/audit/exports").header("Authorization", token)).andExpect(status().isForbidden());
         mvc.perform(get("/actuator/env").header("Authorization", token)).andExpect(status().isForbidden());
         mvc.perform(get("/actuator/health")).andExpect(status().isOk());

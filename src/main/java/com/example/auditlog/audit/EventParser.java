@@ -70,6 +70,9 @@ public class EventParser {
                 throw new InvalidEventException("timestamp must have microsecond precision and a year from 0001 to 9999");
             }
         }
+        if (text(root, "eventType").startsWith("AUDIT_INTERNAL_")) {
+            throw new InvalidEventException("Event type uses a reserved lifecycle namespace");
+        }
         return new EventInput(text(root, "eventType"), text(root, "actorId"), text(root, "resourceType"),
                 text(root, "resourceId"), (Map<String, Object>) payload, timestamp);
     }
@@ -86,7 +89,7 @@ public class EventParser {
             throw new InvalidEventException("payload depth exceeds 20");
         }
         if (value instanceof Map<?, ?> map) {
-            if (map.containsKey("$auditProtected")) {
+            if (map.containsKey("$auditProtected") || map.containsKey("$auditRedacted")) {
                 throw new InvalidEventException("payload uses a reserved protection marker");
             }
             map.values().forEach(item -> validatePayload(item, depth + 1));

@@ -50,6 +50,9 @@ abstract class AppendContract {
 
     @BeforeEach
     void resetIsolatedTestStore() {
+        jdbc.update("DELETE FROM payload_redaction");
+        jdbc.update("DELETE FROM event_archive");
+        jdbc.update("DELETE FROM lifecycle_action");
         jdbc.update("DELETE FROM payload_key");
         jdbc.update("DELETE FROM audit_event");
         jdbc.update("UPDATE chain_head SET last_sequence = 0, last_hash = ? WHERE chain_id = 1", "0".repeat(64));

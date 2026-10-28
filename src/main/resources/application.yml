@@ -31,6 +31,10 @@ springdoc:
     disable-swagger-default-url: true
   paths-to-match: /audit/**
 audit:
+  retention:
+    window: ${AUDIT_RETENTION_WINDOW:P90D}
+    policy-version: ${AUDIT_RETENTION_POLICY_VERSION:v1}
+    batch-size: ${AUDIT_RETENTION_BATCH_SIZE:100}
   jwt:
     issuer: ${AUDIT_JWT_ISSUER:urn:audit-log:local}
     audience: ${AUDIT_JWT_AUDIENCE:audit-log-service}

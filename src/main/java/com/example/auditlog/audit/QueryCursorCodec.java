@@ -44,7 +44,7 @@ public class QueryCursorCodec {
     }
 
     public String encode(Position position, EventQuery query) {
-        byte[] payload = canonical.bytes(Map.of("version", 1, "after", position.after(), "upper", position.upper(),
+        byte[] payload = canonical.bytes(Map.of("version", 2, "after", position.after(), "upper", position.upper(),
                 "headHash", position.headHash(), "filterHash", fingerprint(query)));
         return encode(payload) + "." + encode(sign(payload));
     }
@@ -62,7 +62,7 @@ public class QueryCursorCodec {
             }
             Map<String, Object> fields = json.object(payload);
             if (!fields.keySet().equals(Set.of("version", "after", "upper", "headHash", "filterHash"))
-                    || !BigInteger.ONE.equals(fields.get("version")) || !fingerprint(query).equals(fields.get("filterHash"))) {
+                    || !BigInteger.TWO.equals(fields.get("version")) || !fingerprint(query).equals(fields.get("filterHash"))) {
                 throw new IllegalArgumentException();
             }
             long after = ((BigInteger) fields.get("after")).longValueExact();

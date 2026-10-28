@@ -42,15 +42,26 @@ public class OpenApiConfiguration {
                     .required(List.of("type", "title", "status", "detail")));
             api.getPaths().forEach((path, item) -> item.readOperationsMap().forEach((method, operation) -> {
             String permission = Map.of("POST /audit/events", "AUDIT_WRITE", "GET /audit/events", "AUDIT_READ",
-                    "GET /audit/events/{eventId}", "AUDIT_READ", "GET /audit/verify", "AUDIT_VERIFY")
+                    "GET /audit/events/{eventId}", "AUDIT_READ", "GET /audit/verify", "AUDIT_VERIFY",
+                    "POST /audit/retention/runs", "AUDIT_LIFECYCLE",
+                    "POST /audit/events/{eventId}/redactions", "AUDIT_LIFECYCLE")
                     .get(method.name() + " " + path);
             if (permission == null) {
                 throw new IllegalStateException("New API operations need an explicit documented permission");
             }
             operation.addExtension("x-required-permission", permission);
+            if (method.name().equals("GET") && path.startsWith("/audit/events")) {
+                operation.addExtension("x-include-archived-permission", "AUDIT_LIFECYCLE");
+            }
             var errors = new java.util.LinkedHashMap<>(Map.of("400", "Invalid request", "401", "Invalid or absent bearer token",
                     "403", "Missing permission", "503", "Execution, integrity or key availability failure"));
-            if (path.equals("/audit/verify")) {
+            if (permission.equals("AUDIT_LIFECYCLE")) {
+                errors.put("409", "Operation ID conflicts with another request");
+                errors.put("413", "Lifecycle request exceeds 16 KiB");
+                if (path.endsWith("/redactions")) {
+                    errors.put("404", "Target event not found");
+                }
+            } else if (path.equals("/audit/verify")) {
                 errors.put("429", "Verification capacity exhausted");
             } else if (method.name().equals("POST")) {
                 errors.put("413", "Request exceeds 256 KiB");

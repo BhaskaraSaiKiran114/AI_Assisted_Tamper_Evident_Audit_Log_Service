@@ -8,10 +8,15 @@ import java.util.Map;
 import java.util.Set;
 
 public record EventQuery(String actorId, String resourceType, String resourceId, String eventType,
-        Instant from, Instant to, int limit, String cursor) {
+        Instant from, Instant to, int limit, String cursor, boolean includeArchived) {
+
+    public EventQuery(String actorId, String resourceType, String resourceId, String eventType,
+            Instant from, Instant to, int limit, String cursor) {
+        this(actorId, resourceType, resourceId, eventType, from, to, limit, cursor, false);
+    }
 
     private static final Set<String> PARAMETERS = Set.of(
-            "actorId", "resourceType", "resourceId", "eventType", "from", "to", "limit", "cursor");
+            "actorId", "resourceType", "resourceId", "eventType", "from", "to", "limit", "cursor", "includeArchived");
 
     public EventQuery {
         for (String value : new String[] {actorId, resourceType, resourceId, eventType}) {
@@ -45,7 +50,7 @@ public record EventQuery(String actorId, String resourceType, String resourceId,
             return new EventQuery(get(parameters, "actorId"), get(parameters, "resourceType"), get(parameters, "resourceId"),
                     get(parameters, "eventType"), time(get(parameters, "from")), time(get(parameters, "to")),
                     parameters.containsKey("limit") ? Integer.parseInt(get(parameters, "limit")) : 50,
-                    get(parameters, "cursor"));
+                    get(parameters, "cursor"), archived(parameters));
         } catch (NumberFormatException | DateTimeParseException exception) {
             throw new InvalidEventException("Invalid limit or ISO-8601 time filter");
         }
@@ -60,6 +65,7 @@ public record EventQuery(String actorId, String resourceType, String resourceId,
         fields.put("from", from == null ? null : from.toString());
         fields.put("to", to == null ? null : to.toString());
         fields.put("limit", limit);
+        fields.put("includeArchived", includeArchived);
         return fields;
     }
 
@@ -69,5 +75,16 @@ public record EventQuery(String actorId, String resourceType, String resourceId,
 
     private static Instant time(String value) {
         return value == null ? null : Instant.parse(value);
+    }
+
+    public static boolean archived(Map<String, List<String>> parameters) {
+        if (!parameters.containsKey("includeArchived")) {
+            return false;
+        }
+        List<String> values = parameters.get("includeArchived");
+        if (values.size() != 1 || !(values.getFirst().equals("true") || values.getFirst().equals("false"))) {
+            throw new InvalidEventException("includeArchived must be true or false exactly once");
+        }
+        return values.getFirst().equals("true");
     }
 }

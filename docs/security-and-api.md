@@ -1,6 +1,6 @@
-# Security and API contract - milestone 4
+# Security and API contract - milestones 4-5
 
-M4 enables the implemented write/read/verification APIs through stateless JWT authentication. Health remains public. Lifecycle, export and compliance endpoints are still denied pending their own milestones.
+M4 enables the implemented write/read/verification APIs through stateless JWT authentication. Health remains public. M5 enables lifecycle commands with AUDIT_LIFECYCLE; export and compliance endpoints remain denied.
 
 ## JWT trust contract
 
@@ -21,11 +21,13 @@ The application holds only the verification public key. The local developer help
 | POST /audit/events | AUDIT_WRITE |
 | GET /audit/events, GET /audit/events/{eventId} | AUDIT_READ |
 | GET /audit/verify | AUDIT_VERIFY |
+| POST /audit/retention/runs, POST /audit/events/{eventId}/redactions | AUDIT_LIFECYCLE |
+| GET event list/lookup with includeArchived=true | AUDIT_READ and AUDIT_LIFECYCLE |
 | GET /v3/api-docs, /v3/api-docs.yaml, /v3/api-docs/** | AUDIT_DOCS |
 | GET /swagger-ui.html, /swagger-ui/** including assets | AUDIT_DOCS |
 | Any unlisted method/path | Denied |
 
-Permissions have no implicit hierarchy. AUDIT_DOCS does not read event payloads; AUDIT_READ does not append or verify. Recognizing future AUDIT_LIFECYCLE/AUDIT_EXPORT/AUDIT_COMPLIANCE claims does not enable their unimplemented endpoints. PUT/PATCH/DELETE are not event APIs and remain denied even with every permission.
+Permissions have no implicit hierarchy. AUDIT_DOCS does not read event payloads; AUDIT_READ does not append or verify. AUDIT_LIFECYCLE permits the two implemented POST lifecycle routes. Archived read opt-in requires AUDIT_READ plus AUDIT_LIFECYCLE. Recognizing AUDIT_EXPORT/AUDIT_COMPLIANCE claims does not enable their unimplemented endpoints. PUT/PATCH/DELETE are not event APIs and remain denied even with every permission.
 
 This is a single-tenant, service-wide permission model. AUDIT_READ can retrieve all recorded resources and decrypt configured payload values. The authenticated subject identifies the producer; actorId remains a producer assertion, which may represent another actor. No claim of upstream completeness or independent actor identity attestation is made.
 
@@ -75,7 +77,7 @@ Use a dedicated fresh database/cluster. Bootstrap scripts intentionally refuse e
 2. scripts/postgres/02-passwords.sql is a psql initialization file. It reads AUDIT_MIGRATION_PASSWORD/AUDIT_DB_PASSWORD from environment using psql variables and assigns quoted passwords; secrets are not embedded in committed SQL or command arguments.
 3. Flyway connects as audit_migrator. PostgreSQL-only V3 grants runtime SELECT/INSERT on audit_event and payload_key, SELECT on chain_head, and UPDATE only on its last_sequence/last_hash columns. Runtime owns no tables and cannot read Flyway history, alter/create/drop/truncate objects, update/delete events, delete keys/head, create temporary tables or assume the migrator role.
 
-Column-limited head UPDATE permits the append lock/head advance. Event history remains append-only for runtime credentials. Lifecycle-specific key deletion privileges are intentionally absent until M5's reviewed design. H2 has no claim of equivalent database-role hardening.
+Column-limited head UPDATE permits the append lock/head advance. Event history remains append-only for runtime credentials. M5 V4 adds immutable lifecycle evidence tables; PostgreSQL V5 grants SELECT/INSERT and a narrowly scoped SECURITY DEFINER erasure function. Direct key DELETE and proof UPDATE/DELETE remain denied. See lifecycle.md and ADR-007 for evidence checks, search_path restrictions, limits under compromised credentials and active-store-only erasure. H2 has no claim of equivalent database-role hardening.
 
 Compose initializes these scripts only for a **new** data volume. Fill three distinct nonempty passwords in ignored .env (admin, migration, runtime); blank examples deliberately fail startup. Spring uses AUDIT_DB_USERNAME=audit_runtime / AUDIT_DB_PASSWORD and separate AUDIT_MIGRATION_USERNAME=audit_migrator / AUDIT_MIGRATION_PASSWORD. It also needs the existing payload master key and the JWT public key. .env is read by Compose, not automatically by Spring.
 
@@ -89,4 +91,4 @@ SecurityIntegrationTest signs real RSA tokens and exercises the real resource-se
 
 Reference tests require both AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes, plus a fresh disposable cluster/database named audit_m2_test. The runner supplies these only for its new cluster; CI uses its ephemeral service. Never use a shared server: roles are cluster-wide. Missing consent fails before connecting; existing role names cause refusal rather than credential replacement.
 
-Current proof is local H2/PostgreSQL 16.3. Compose/CI 17.6 execution, dependency advisory scan, performance/load evidence, lifecycle/export/compliance and production readiness remain later work. See the M4 validation ledger and ADR-006. Public implementation references: [Spring JWT resource server](https://www.springframework.org/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [PostgreSQL privileges](https://www.postgresql.org/docs/16/ddl-priv.html).
+Current proof is local H2/PostgreSQL 16.3. Compose/CI 17.6 execution, dependency advisory scan, performance/load evidence, export/compliance and production readiness remain later work. See the M4/M5 validation ledgers and ADR-006/007. M5 passed 85 normal and 41 PostgreSQL cases, including real-JWT lifecycle policies and scoped erasure through the restricted pool. Public implementation references: [Spring JWT resource server](https://www.springframework.org/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [PostgreSQL privileges](https://www.postgresql.org/docs/16/ddl-priv.html).

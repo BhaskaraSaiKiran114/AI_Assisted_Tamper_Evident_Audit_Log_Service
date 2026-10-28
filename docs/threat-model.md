@@ -24,3 +24,9 @@ Assume malicious requests, compromised producers, accidental/operator edits and 
 | Authenticated full-scan exhaustion | M4 nonblocking per-process semaphore, 429 on capacity and release after failures | Distributed quotas and measured performance remain M8; no CPU/wall-clock SLA |
 
 Failures must not report success: append rollback cannot advance head; verification timeout/error cannot return intact=true; missing field keys cannot expose ciphertext as plaintext; invalid bundle signature/proof/version must fail verification; failed lifecycle operations cannot claim completed redaction/archival.
+
+## M5 lifecycle defenses and limits
+
+Implemented lifecycle actions commit operator/intent/targets to the immutable chain and validate archive/redaction metadata against that evidence. Atomic rollback, retry binding, protected archive opt-in, reserved administrative namespace and narrow PostgreSQL erasure capability are exercised on both databases. Restored erased keys and missing/changed markers fail integrity checks.
+
+Runtime credentials still permit inserts and scoped function calls: process/credential compromise can manufacture future evidence; JWT and external approval are not database-enforced. WAL, backups, replicas, earlier MVCC snapshots/in-flight reads, caches and prior disclosures can retain values or keys. Master-key access plus an old wrapped key can recover plaintext. Physical erasure, tenant controls, legal holds, independent approval systems and production KMS are outside this milestone. See lifecycle.md for the precise boundary.

@@ -2,19 +2,19 @@
 
 `./mvnw clean verify` (Windows `.\mvnw.cmd clean verify`) enforces Java 21, runs Checkstyle, compiles/tests and packages the Boot JAR. `FoundationIntegrationTest` starts H2/Flyway/Security and checks genesis initialization, minimal health and denied audit/docs access. It tests infrastructure, not future business behavior.
 
-Surefire runs *Test; normal verify runs 63 unit/H2/security cases. Explicit postgres-it adds 26 cases (8 append, 16 read/verify, 2 actual restricted-pool privilege cases), validated locally on PostgreSQL 16.3. Both disposable-database and cluster-role consent flags plus a fresh audit_m2_test database/cluster are mandatory. The Windows runner creates/stops its own cluster; CI's 17.6 service is configured, not externally executed. The M4 combined gate passed all 89 cases with no failures/errors/skips.
+Surefire runs *Test; normal verify runs 85 unit/H2/security cases. Explicit postgres-it adds 41 cases (8 append, 16 read/verify, 13 lifecycle, 4 actual restricted-pool privilege cases), validated locally on PostgreSQL 16.3. Both disposable-database and cluster-role consent flags plus a fresh audit_m2_test database/cluster are mandatory. The Windows runner creates/stops its own cluster; CI's 17.6 service is configured, not externally executed. The M5 combined gate passed all 126 cases with no failures/errors/skips.
 
 | Milestone | Validation scope and progress |
 | --- | --- |
 | M2 | Implemented: canonical vectors, JSON/time/number rules, encryption, input bounds, links, parallel writes, rollback, no mutation APIs |
 | M3 | Implemented: filters/time edges, sparse stable pages, cursor signing/binding, empty chain, tampering/links/gaps/head/schema checks, concurrent snapshot traversal, safe error contracts |
 | M4 | Implemented: real signed tokens and required-claim/algorithm/time checks, seven-role permission matrix, safe auth errors, protected spec/UI assets, local key/token helper, verification capacity/release, real runtime-pool privilege and object-ownership proof |
-| M5 | Archive age/retries, intact archived chain, selective/repeated key erasure, denied operations, rollback and documented backup/export boundaries |
+| M5 | Implemented: archive age/retries, intact archived chain, selective/repeated key erasure, denied operations, rollback and documented backup/export boundaries |
 | M6 | Offline verifier, sparse proof, corrupted/reordered/missing content, wrong key/signature/version, archived/redacted export |
 | M7 | Account-access vocabulary, permissions, account/actor/time/action/outcome filters, restricted fields and source completeness assumption |
 | M8 | PostgreSQL A/B/C walkthrough, SQL tamper demonstration, fresh setup, security scan, measured performance and live-change rehearsal |
 
-PostgreSQL establishes reference behavior; H2 alone cannot. M2 covers append transactions; M3 covers filtered reads, tampering and database-specific snapshots; M4 proves actual runtime credentials can append/read/verify while forbidden SQL fails 42501 and migration objects have the separate owner. Existing destructive contracts intentionally retain guarded administrator fixtures, never runtime production privileges. The profile fails rather than skips without both consent flags/configuration and refuses existing role names. Normal verify intentionally omits PostgreSQL. Later lifecycle/export/reporting scenarios and production operations remain untested.
+PostgreSQL establishes reference behavior; H2 alone cannot. M2 covers append transactions; M3 covers filtered reads, tampering and database-specific snapshots; M4 proves actual runtime credentials can append/read/verify while forbidden SQL fails 42501 and migration objects have the separate owner. Existing destructive contracts intentionally retain guarded administrator fixtures, never runtime production privileges. The profile fails rather than skips without both consent flags/configuration and refuses existing role names. Normal verify intentionally omits PostgreSQL. M5 adds both shared lifecycle contracts and actual restricted-pool archival/erasure tests, including denial of unaudited erasure and direct key deletion. Export/reporting scenarios and production operations remain untested.
 
 Other gates:
 

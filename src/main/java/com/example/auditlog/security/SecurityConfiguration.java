@@ -27,6 +27,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/audit/events").hasAuthority("AUDIT_WRITE")
+                        .requestMatchers(HttpMethod.POST, "/audit/retention/runs", "/audit/events/*/redactions")
+                                .hasAuthority("AUDIT_LIFECYCLE")
                         .requestMatchers(HttpMethod.GET, "/audit/events", "/audit/events/*").hasAuthority("AUDIT_READ")
                         .requestMatchers(HttpMethod.GET, "/audit/verify").hasAuthority("AUDIT_VERIFY")
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs", "/v3/api-docs.yaml", "/v3/api-docs/**",

@@ -8,7 +8,7 @@ public record VerificationResult(boolean intact, long checkedCount, ChainHead sn
 
     public enum ViolationType {
         CONTENT_HASH_MISMATCH, INDEX_FIELD_MISMATCH, PREVIOUS_HASH_MISMATCH, SEQUENCE_GAP,
-        HEAD_MISMATCH, MALFORMED_CONTENT, UNSUPPORTED_SCHEMA_VERSION
+        HEAD_MISMATCH, MALFORMED_CONTENT, UNSUPPORTED_SCHEMA_VERSION, LIFECYCLE_MISMATCH
     }
 
     public record Inconsistency(long sequence, UUID eventId, ViolationType type) { }

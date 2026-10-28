@@ -42,6 +42,9 @@ public class AuditReadRepository {
     public List<StoredEvent> page(EventQuery query, long after, long upper) {
         StringBuilder sql = new StringBuilder("SELECT * FROM audit_event WHERE event_sequence > ? AND event_sequence <= ?");
         List<Object> parameters = new ArrayList<>(List.of(after, upper));
+        if (!query.includeArchived()) {
+            sql.append(" AND NOT EXISTS (SELECT 1 FROM event_archive a WHERE a.event_id = audit_event.event_id)");
+        }
         filter(sql, parameters, "actor_id", query.actorId());
         filter(sql, parameters, "resource_type", query.resourceType());
         filter(sql, parameters, "resource_id", query.resourceId());

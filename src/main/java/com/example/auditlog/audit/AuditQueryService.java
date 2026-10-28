@@ -9,13 +9,15 @@ import com.example.auditlog.audit.VerificationResult.ChainHead;
 import com.example.auditlog.persistence.AuditReadRepository;
 import com.example.auditlog.persistence.StoredEvent;
 import com.example.auditlog.persistence.ReadSnapshot;
+import com.example.auditlog.lifecycle.LifecycleEvidence;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuditQueryService {
 
     public record EventView(UUID eventId, long sequence, String eventType, String actorId, String resourceType,
-            String resourceId, Object payload, Instant timestamp, Instant ingestedAt, String previousHash, String recordHash) { }
+            String resourceId, Object payload, Instant timestamp, Instant ingestedAt, String previousHash, String recordHash,
+            boolean archived, List<String> redactedPaths) { }
 
     public record EventPage(List<EventView> events, int limit, String nextCursor, ChainHead snapshotHead) { }
 
@@ -24,14 +26,16 @@ public class AuditQueryService {
     private final PayloadReader payloads;
     private final QueryCursorCodec cursors;
     private final ReadSnapshot snapshots;
+    private final LifecycleEvidence lifecycle;
 
     public AuditQueryService(AuditReadRepository repository, EventIntegrityChecker checker,
-            PayloadReader payloads, QueryCursorCodec cursors, ReadSnapshot snapshots) {
+            PayloadReader payloads, QueryCursorCodec cursors, ReadSnapshot snapshots, LifecycleEvidence lifecycle) {
         this.repository = repository;
         this.checker = checker;
         this.payloads = payloads;
         this.cursors = cursors;
         this.snapshots = snapshots;
+        this.lifecycle = lifecycle;
     }
 
     public EventPage query(EventQuery query) {
@@ -63,15 +67,21 @@ public class AuditQueryService {
     }
 
     public EventView find(UUID id) {
+        return find(id, false);
+    }
+
+    public EventView find(UUID id, boolean includeArchived) {
         return snapshots.execute(30, () -> view(repository.find(id)
+                .filter(event -> includeArchived || !lifecycle.archived(event.eventId()))
                 .orElseThrow(() -> new AuditQueryException(404, "Audit event not found"))));
     }
 
     private EventView view(StoredEvent event) {
         try {
-            Object payload = payloads.read(event.eventId(), checker.check(event));
+            var payload = payloads.read(event.eventId(), checker.check(event));
             return new EventView(event.eventId(), event.sequence(), event.eventType(), event.actorId(), event.resourceType(),
-                    event.resourceId(), payload, event.timestamp(), event.ingestedAt(), event.previousHash(), event.recordHash());
+                    event.resourceId(), payload.value(), event.timestamp(), event.ingestedAt(), event.previousHash(), event.recordHash(),
+                    lifecycle.archived(event.eventId()), payload.redactedPaths());
         } catch (EventIntegrityException exception) {
             throw new AuditQueryException(503, "Stored audit data failed integrity checks");
         }

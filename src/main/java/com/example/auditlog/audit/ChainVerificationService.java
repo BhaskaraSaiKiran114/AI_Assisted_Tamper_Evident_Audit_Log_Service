@@ -13,6 +13,7 @@ import com.example.auditlog.audit.VerificationResult.ViolationType;
 import com.example.auditlog.persistence.AuditReadRepository;
 import com.example.auditlog.persistence.StoredEvent;
 import com.example.auditlog.persistence.ReadSnapshot;
+import com.example.auditlog.lifecycle.LifecycleEvidence;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -23,12 +24,14 @@ public class ChainVerificationService {
     private final EventIntegrityChecker checker;
     private final ReadSnapshot snapshots;
     private final Semaphore permits;
+    private final LifecycleEvidence lifecycle;
 
     public ChainVerificationService(AuditReadRepository repository, EventIntegrityChecker checker, ReadSnapshot snapshots,
-            @Value("${audit.verification.max-concurrent:2}") int maxConcurrent) {
+            @Value("${audit.verification.max-concurrent:2}") int maxConcurrent, LifecycleEvidence lifecycle) {
         this.repository = repository;
         this.checker = checker;
         this.snapshots = snapshots;
+        this.lifecycle = lifecycle;
         if (maxConcurrent < 1 || maxConcurrent > 16) {
             throw new IllegalArgumentException("Verification concurrency must be from 1 to 16");
         }
@@ -69,6 +72,7 @@ public class ChainVerificationService {
                 }
                 try {
                     checker.check(event);
+                    lifecycle.checkEvent(event);
                 } catch (EventIntegrityException exception) {
                     return broken(count, head, event.sequence(), event.eventId(), exception.type());
                 }

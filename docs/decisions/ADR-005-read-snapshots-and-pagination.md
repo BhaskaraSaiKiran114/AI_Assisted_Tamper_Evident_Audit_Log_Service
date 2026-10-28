@@ -2,7 +2,7 @@
 
 Date: 2026-10-28. Status: M3 implementation refinement of the approved consistent-snapshot/query contract.
 
-Decision: parameterized conjunctive filters, occurrence-time [from,to), ascending sequence pages with fixed upper sequence/head hash and HMAC-signed versioned cursor. Bind filters and page size; reject altered/unavailable anchors. Optional externally configured signing key supports restarts/shared instances; default is ephemeral. Return original protected payload values only after row validation and authenticated key unwrapping. Missing keys are availability errors until M5 defines legitimate redaction.
+Decision: parameterized conjunctive filters, occurrence-time [from,to), ascending sequence pages with fixed upper sequence/head hash and HMAC-signed versioned cursor. Bind filters and page size; reject altered/unavailable anchors. Optional externally configured signing key supports restarts/shared instances; default is ephemeral. Return original protected payload values only after row validation and authenticated key unwrapping. M5 adds validated redaction evidence for legitimate missing keys, archive opt-in and cursor v2; see ADR-007. Unexplained missing keys remain availability errors.
 
 Verification walks all rows, not only rows <= recorded head, so underreported heads are detectable. Recompute committed bytes and compare query columns, links, continuity and final head. No key availability is needed for ciphertext-chain verification. Filtered queries are not whole-chain integrity proofs.
 

@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import org.springframework.util.MultiValueMap;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,14 +43,26 @@ public class AuditReadController {
             @Parameter(name = "from", description = "Inclusive ISO-8601 occurrence instant"),
             @Parameter(name = "to", description = "Exclusive ISO-8601 occurrence instant"),
             @Parameter(name = "limit", description = "1-200, default 50"),
-            @Parameter(name = "cursor", description = "Signed opaque continuation token")})
-    public EventPage events(@Parameter(hidden = true) @RequestParam MultiValueMap<String, String> parameters) {
-        return queries.query(EventQuery.parse(parameters));
+            @Parameter(name = "cursor", description = "Signed opaque continuation token"),
+            @Parameter(name = "includeArchived", description = "true/false, default false. true additionally requires AUDIT_LIFECYCLE")})
+    public EventPage events(@Parameter(hidden = true) @RequestParam MultiValueMap<String, String> parameters,
+            @Parameter(hidden = true) Authentication authentication) {
+        EventQuery query = EventQuery.parse(parameters);
+        archivePermission(query.includeArchived(), authentication);
+        return queries.query(query);
     }
 
     @GetMapping("/events/{eventId}")
     @Operation(summary = "Get an event", description = "Requires AUDIT_READ; 404 if absent, 503 if integrity/key availability fails.")
-    public EventView event(@PathVariable String eventId) {
+    @Parameter(name = "includeArchived", description = "true additionally requires AUDIT_LIFECYCLE",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "boolean", defaultValue = "false"))
+    public EventView event(@PathVariable String eventId, @Parameter(hidden = true) @RequestParam MultiValueMap<String, String> parameters,
+            @Parameter(hidden = true) Authentication authentication) {
+        if (!java.util.Set.of("includeArchived").containsAll(parameters.keySet())) {
+            throw new InvalidEventException("Lookup only accepts includeArchived");
+        }
+        boolean includeArchived = EventQuery.archived(parameters);
+        archivePermission(includeArchived, authentication);
         UUID id;
         try {
             id = UUID.fromString(eventId);
@@ -58,7 +72,7 @@ public class AuditReadController {
         } catch (IllegalArgumentException exception) {
             throw new InvalidEventException("eventId must be a UUID");
         }
-        return queries.find(id);
+        return queries.find(id, includeArchived);
     }
 
     @GetMapping("/verify")
@@ -69,5 +83,12 @@ public class AuditReadController {
             throw new InvalidEventException("Verification does not accept filters");
         }
         return verification.verify();
+    }
+
+    private void archivePermission(boolean includeArchived, Authentication authentication) {
+        if (includeArchived && (authentication == null || authentication.getAuthorities().stream()
+                .noneMatch(authority -> authority.getAuthority().equals("AUDIT_LIFECYCLE")))) {
+            throw new AccessDeniedException("Archived reads require lifecycle permission");
+        }
     }
 }
