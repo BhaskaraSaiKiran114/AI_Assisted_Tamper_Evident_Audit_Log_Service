@@ -314,15 +314,23 @@ public final class ExportBundle {
             require(args.length == 2, "Usage: java -jar audit-log-service-*-verifier.jar bundle.zip trusted-public-key-base64.txt");
             Path bundle = Path.of(args[0]);
             Path key = Path.of(args[1]);
-            require(Files.size(bundle) <= MAX_BODY + 1024 * 1024 && Files.size(key) <= 16384, "Input exceeds limit");
             PublicKey trusted = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(
-                    Base64.getDecoder().decode(Files.readString(key, StandardCharsets.US_ASCII).trim())));
-            Verified verified = verify(Files.readAllBytes(bundle), trusted);
+                    Base64.getDecoder().decode(new String(boundedFile(key, 16384), StandardCharsets.US_ASCII).trim())));
+            Verified verified = verify(boundedFile(bundle, MAX_BODY + 1024 * 1024), trusted);
             System.out.println("VERIFIED selected=" + verified.selectedIds().size() + " head=" + verified.headSequence()
                     + " hash=" + verified.headHash() + " createdAt=" + verified.createdAt());
         } catch (Exception exception) {
             System.err.println("INVALID: bundle, format or trusted key verification failed");
             System.exit(1);
+        }
+    }
+
+    private static byte[] boundedFile(Path path, int limit) throws IOException {
+        require(Files.size(path) <= limit, "Input exceeds limit");
+        try (var input = Files.newInputStream(path)) {
+            byte[] bytes = input.readNBytes(limit + 1);
+            require(bytes.length <= limit, "Input exceeds limit");
+            return bytes;
         }
     }
 }

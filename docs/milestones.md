@@ -1,6 +1,6 @@
 # Incremental implementation plan
 
-Eight milestones, executed in dependency order. The user separately authorized M1-M7 on 2026-10-28; M8 remains planned only. Authorization to implement is separate from human acceptance of the delivered output.
+Eight milestones, executed in dependency order. The user separately authorized M1-M8 on 2026-10-28; all engineering deliverables are now delivered. Authorization to implement is separate from human acceptance of the delivered output.
 
 | Milestone | Dependencies | Intent and scope | Completion evidence | Status |
 | --- | --- | --- | --- | --- |
@@ -11,7 +11,7 @@ Eight milestones, executed in dependency order. The user separately authorized M
 | M5 Retention and redaction | M2-M4 | Configurable archival, audited lifecycle actions and per-field key erasure | Eligibility, idempotency, intact chain, unreadable redacted values, permission/rollback tests | Complete, 2026-10-28; 126 tests including 41 PostgreSQL tests; human acceptance pending |
 | M6 Verifiable export | M3-M5 | Filtered bundles, bridging headers, signed manifest and independent verifier | Verification without service; altered/missing/reordered content and wrong trust key rejected | Complete, 2026-10-28; 168 combined tests (57 PostgreSQL + 1 offline CLI); human acceptance pending |
 | M7 Compliance reporting | M3-M6; C clarification in M1 | Bounded account-access report with explicit assumptions/scope | Authorized account/actor/time/action/outcome tests; no payload leakage | Complete, 2026-10-28; 207 tests (74 PostgreSQL + 1 offline CLI); human acceptance pending |
-| M8 Final readiness | M1-M7 | PostgreSQL end-to-end, performance/security review, walkthrough and final summary | A/B/C evidence, all quality-gate results, human acceptance and authentic submission preparation | Not started |
+| M8 Final readiness | M1-M7 | PostgreSQL end-to-end, performance/security review, walkthrough and final summary | A/B/C evidence, all quality-gate results, authentic submission preparation; human acceptance remains separate | Engineering complete, 2026-10-28; 210 readiness checks and advisory gate passed; human acceptance/signature/submission pending |
 
 ## Every-milestone completion protocol
 

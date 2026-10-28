@@ -1,0 +1,18 @@
+{
+  "recordedAtUtc": "2026-10-28T09:50:36.620362+00:00",
+  "artifacts": [
+    {
+      "path": "target/audit-log-service-0.1.0-SNAPSHOT.jar",
+      "bytes": 41156219,
+      "sha256": "d84c27beddaed7c8675f53d66e3133f072197290a04225a0b351199e91e5e466",
+      "runtimeEntriesMatchEarlierPatchedBuild": true
+    },
+    {
+      "path": "target/audit-log-service-0.1.0-SNAPSHOT-verifier.jar",
+      "bytes": 16295,
+      "sha256": "a88c74ce01227a50fc2038a03011322442d5410b0530d264dfb1f27d692649ba",
+      "runtimeEntriesMatchEarlierPatchedBuild": true
+    }
+  ],
+  "note": "Final readiness build digests; not signed provenance or remote submission."
+}

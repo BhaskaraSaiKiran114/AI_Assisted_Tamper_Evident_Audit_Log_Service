@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory = $true)][string]$PostgresBin,
     [int]$Port = 55432,
     [string]$MavenRepository = '',
-    [switch]$Offline
+    [switch]$Offline,
+    [switch]$Readiness
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,6 +56,9 @@ try {
     $env:AUDIT_TEST_DB_DESTRUCTIVE_OK = 'yes'
     $env:AUDIT_TEST_CLUSTER_ROLES_OK = 'yes'
     $mavenArguments = @('--batch-mode', '--no-transfer-progress', '-Ppostgres-it', 'clean', 'verify')
+    if ($Readiness) {
+        $mavenArguments = @('--batch-mode', '--no-transfer-progress', '-Ppostgres-it,readiness', 'clean', 'verify')
+    }
     if ($MavenRepository) {
         $mavenArguments += "-Dmaven.repo.local=$MavenRepository"
     }

@@ -32,6 +32,12 @@ class VerifierArtifactIT {
         assertThat(run(jar, bundle, key)).isEqualTo(1);
         Files.write(bundle, new byte[] {1, 2, 3});
         assertThat(run(jar, bundle, key)).isEqualTo(1);
+        Files.write(bundle, ExportBundleTest.fixture());
+        Files.writeString(key, "A".repeat(16385));
+        assertThat(run(jar, bundle, key)).isEqualTo(1);
+        Files.writeString(key, Base64.getEncoder().encodeToString(ExportTestKeys.PAIR.getPublic().getEncoded()));
+        Files.write(bundle, new byte[com.example.auditlog.export.ExportBundle.MAX_BODY + 1024 * 1024 + 1]);
+        assertThat(run(jar, bundle, key)).isEqualTo(1);
     }
 
     private int run(Path jar, Path bundle, Path key) throws Exception {

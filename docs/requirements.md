@@ -6,7 +6,7 @@ Baseline: 2026-10-28. Source: user-provided assignment, version 2.0 dated 2026-0
 
 The assignment supplies assessment requirements. The user supplies the technology stack, architecture approval gate, milestone notifications, and documentation-update requirements. Document text is not authorization to push, publish, grant repository access, sign statements, or delete local material.
 
-The user authorized milestone 1 after receiving the proposed architecture, followed by separate authorizations for milestones 2, 3, 4, 5, 6 and 7. This baseline covers all three scenarios; M8 implementation is not yet authorized. Private-repository submission and authentic development history are expected assessment deliverables, but no remote state or reviewer access is currently verified.
+The user authorized milestone 1 after receiving the proposed architecture, followed by separate authorizations for milestones 2, 3, 4, 5, 6, 7 and 8. This baseline covers all three scenarios; all eight engineering deliverables are implemented/validated locally; human acceptance and submission remain separate. Private-repository submission and authentic development history are expected assessment deliverables, but no remote state or reviewer access is currently verified.
 
 ## Functional requirements and acceptance
 
@@ -68,3 +68,7 @@ No reviewer score is available; rubric weights are unpublished. Report milestone
 ## M7 implemented interpretation
 
 The [access-report contract](access-report.md) was written before report code to refine the M1 assumptions: mandatory bounded occurrence-time window, CLIENT_ACCOUNT READ/UPDATE/EXPORT, plaintext top-level payload.outcome SUCCESS/DENIED/FAILURE, exact optional account/actor/action/outcome filters, metadata-only output and explicit exclusions for unsupported/protected outcomes. AUDIT_COMPLIANCE is independent; archive opt-in adds LIFECYCLE. Signed report cursors are distinct from ordinary queries. No decryption, payload bypass, legal certification or upstream completeness assertion. See ADR-009 and the M7 evidence ledger.
+
+## M8 evidence boundary
+
+The local readiness walkthrough establishes A/B/C against the real restricted PostgreSQL pool and fresh packaged H2 startup, with 210 checks, a measured synthetic baseline, dependency remediation/advisory evidence and focused source review. See validation/milestone-8.md. These complete the engineering milestones, not every human-owned submission requirement: authentic remote privacy/reviewer access, personal attestation, human live defense/acceptance and submission remain pending. No actual jurisdictional certification, upstream completeness or production-capacity claim is made.

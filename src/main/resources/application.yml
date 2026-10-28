@@ -26,6 +26,8 @@ springdoc:
   api-docs:
     enabled: true
   swagger-ui:
+    # Maven resource filtering keeps Springdoc's asset path aligned with the patched WebJar.
+    version: '@swagger-ui.version@'
     enabled: true
     persist-authorization: false
     disable-swagger-default-url: true

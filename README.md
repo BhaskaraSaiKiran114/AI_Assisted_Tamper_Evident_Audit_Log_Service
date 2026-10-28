@@ -1,6 +1,6 @@
 # Tamper-Evident Audit Log Service
 
-Engineer-led Java prototype. **Milestones 1-7 complete (7/8, 87.5%).** Ingestion, protected payloads, atomic hash-chain append, filtered reads/pagination, verification, JWT permissions, protected OpenAPI/Swagger and restricted PostgreSQL runtime credentials are implemented. Audited retention and selective field-key erasure are implemented; signed export and an independent verifier are implemented; bounded metadata-only account-access reporting is implemented.
+Engineer-led Java prototype. **Eight engineering milestones delivered (8/8, 100%); human acceptance/submission pending.** Ingestion, protected payloads, atomic hash-chain append, filtered reads/pagination, verification, JWT permissions, protected OpenAPI/Swagger and restricted PostgreSQL runtime credentials are implemented. Audited retention and selective field-key erasure are implemented; signed export and an independent verifier are implemented; bounded metadata-only account-access reporting is implemented.
 
 ## Engineering baseline
 
@@ -88,7 +88,7 @@ Verification traverses all stored records and reports intact, checkedCount, snap
 
 ## Quality gates
 
-Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M7 passed all 207 combined cases, including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
+Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M8 passed all 210 opt-in readiness cases (132 unit/H2, 74 PostgreSQL, one offline CLI and three readiness cases), including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
 
 ```powershell
 .\mvnw.cmd -Psecurity-audit verify
@@ -119,7 +119,7 @@ Retention defaults to P90D, policy v1 and batches of 100; set AUDIT_RETENTION_WI
 
 See the [export contract/setup](docs/exports.md), [format decision](docs/decisions/ADR-008-bounded-independent-exports.md) and [M6 evidence](docs/validation/milestone-6.md). GET /audit/exports?actorId=synthetic-actor (or resourceId) requires AUDIT_EXPORT. Archive opt-in additionally needs LIFECYCLE. Configure a separate AUDIT_EXPORT_PRIVATE_KEY_BASE64; blank means exports return 503. Selected original protected bytes, minimal bridging headers and signed manifest form a bounded ZIP; no field keys or decrypted protected values are included.
 
-Normal package also creates target/audit-log-service-0.1.0-SNAPSHOT-verifier.jar. Run it with Java 21, a bundle path and a separately trusted Base64 SPKI public-key file. The tool needs no service, database, Maven or third-party libraries; normal clean verify executes the packaged tool. Defaults cap whole-chain headers at 10000, selected events at 1000, body at 16 MiB and concurrent exports at two. Limits fail without partial output. Signed hidden-content headers/status do not prove filter completeness, upstream truth or physical erasure. M8 has not started.
+Normal package also creates target/audit-log-service-0.1.0-SNAPSHOT-verifier.jar. Run it with Java 21, a bundle path and a separately trusted Base64 SPKI public-key file. The tool needs no service, database, Maven or third-party libraries; normal clean verify executes the packaged tool. Defaults cap whole-chain headers at 10000, selected events at 1000, body at 16 MiB and concurrent exports at two. Limits fail without partial output. Signed hidden-content headers/status do not prove filter completeness, upstream truth or physical erasure. M8 local readiness evidence is delivered; human acceptance/submission remain pending.
 
 ## Account-access reporting (M7)
 
@@ -138,3 +138,11 @@ Synthetic producer payload example (append using a separate WRITE-authorized tok
 ```json
 {"eventType":"READ","actorId":"synthetic-actor","resourceType":"CLIENT_ACCOUNT","resourceId":"synthetic-account","timestamp":"2026-10-01T12:00:00Z","payload":{"outcome":"SUCCESS","accountNumber":"synthetic-only"}}
 ```
+
+## Final readiness (M8)
+
+[Final engineering summary](docs/final-engineering-summary.md), [validation ledger](docs/validation/milestone-8.md), [walkthrough](docs/walkthrough.md), [security review](docs/security-review.md) and [performance baseline](docs/performance.md) distinguish local evidence from production/owner acceptance. Run the disposable PostgreSQL helper with -Readiness to add real HTTP A/B/C, 1000 synthetic appends and fresh packaged-JAR startup to the ordinary reference suite. Normal verify remains 133 checks; reference verify 207; readiness verify 210.
+
+The advisory audit led to compatible explicit dependency patches while preserving Boot 4.1.0. Dependency-Check 13.0.0 passed with zero reported vulnerable records in its NVD/RetireJS coverage; OSS Index lacked credentials. No project suppression/error bypass was added. The security guide gives the supported mirror command, data freshness and exact versions. A measured patched local run reached 186.665 appends/second at concurrency four, p95 26.570 ms; this is not a production SLO or capacity guarantee.
+
+Optional Python 3 hygiene: python scripts/check-deliverables.py scans non-ignored Git files for limited secret patterns, source-assignment filenames, whitespace and missing local Markdown links without printing matched secret values. It does not replace security review. Artifact sizes/hashes and sanitized measurements are under docs/validation/. No personal signature, external publication, reviewer access or submission was performed.

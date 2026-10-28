@@ -1,0 +1,40 @@
+{
+  "tool": "OWASP Dependency-Check",
+  "engineVersion": "13.0.0",
+  "reportDate": "2026-10-28T09:36:13.978094900Z",
+  "dataSources": [
+    {
+      "name": "NVD API Last Checked",
+      "timestamp": "2026-10-28T09:33:21Z"
+    },
+    {
+      "name": "NVD API Last Modified",
+      "timestamp": "2026-10-27T16:17:33Z"
+    },
+    {
+      "name": "NVD Cache Last Checked",
+      "timestamp": "2026-10-28T09:33:21Z"
+    },
+    {
+      "name": "NVD Cache Last Modified",
+      "timestamp": "2026-10-27T16:17:33Z"
+    }
+  ],
+  "dependencyRecords": 59,
+  "vulnerableDependencyRecords": 0,
+  "vulnerabilityOccurrences": 0,
+  "gate": "CVSS >= 7; failOnError true; passed",
+  "suppressionFileAdded": false,
+  "coverageLimit": "OSS Index automatically disabled without credentials; compile/runtime default scope; NVD mirror freshness is bounded",
+  "patches": {
+    "springFramework": "7.0.10",
+    "springSecurity": "7.1.2",
+    "tomcat": "11.0.27",
+    "postgresqlJdbc": "42.7.14",
+    "jackson2Bom": "2.21.8",
+    "log4j2": "2.25.5",
+    "swaggerUi": "5.34.0",
+    "springBootRetained": "4.1.0"
+  },
+  "cveImportErrors": 0
+}

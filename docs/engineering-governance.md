@@ -2,7 +2,7 @@
 
 ## Ownership and authority
 
-The candidate owns correctness, execution, maintainability, authorship and readiness claims. AI assists bounded tasks and supplies reviewable outputs. M1-M7 were authorized separately; M8 requires further instruction. No agent has signed or submitted on the candidate's behalf.
+The candidate owns correctness, execution, maintainability, authorship and readiness claims. AI assists bounded tasks and supplies reviewable outputs. M1-M8 were authorized separately; all engineering deliverables are delivered, with human acceptance/submission pending. No agent has signed or submitted on the candidate's behalf.
 
 The assignment is confidential context. Keep its source out of the repository and public services. Web checks use generic public technology queries. Use synthetic examples only; never submit credentials, tokens, private keys, client identifiers/payloads or unreviewed logs to AI.
 
@@ -20,14 +20,14 @@ Each milestone has intent, constraints, dependencies and acceptance criteria. AI
 
 | Gate | Mechanism | Current evidence / remaining work |
 | --- | --- | --- |
-| Toolchain | Maven Enforcer: JDK 21; Maven >=3.9.9 and <4; compiler release 21 | Passed through M4; actual results in milestone ledgers |
+| Toolchain | Maven Enforcer: JDK 21; Maven >=3.9.9 and <4; compiler release 21 | Passed through M8; actual results in milestone ledgers |
 | Static/style | Compiler diagnostics, Checkstyle at validate for main/test | Small baseline, not exhaustive static analysis |
-| Tests/package | Surefire/Failsafe and executable Boot JAR via clean verify | M7: 132 unit/H2 + 74 PostgreSQL + 1 offline-verifier case passed; later scenario suites follow implementation |
-| Dependency security | Opt-in security-audit profile, CVSS >=7 failure | Requires current external data; no pass claimed until executed |
-| Secrets | Ignore rules, diff review, targeted secret inspection | Local review through M4; generated keys/credentials ignored; dedicated automation by M8 |
+| Tests/package | Surefire/Failsafe and executable Boot JAR via clean verify | M8: 132 unit/H2 + 74 PostgreSQL + 1 offline verifier + 3 readiness cases passed (210); package produced |
+| Dependency security | Opt-in security-audit profile, CVSS >=7 failure | 13.0.0 final gate passed, zero reported findings in NVD/RetireJS coverage; OSS Index unavailable without credentials; freshness/scope explicit |
+| Secrets | Ignore rules, diff review, targeted secret inspection | M8 limited-pattern/link/whitespace automation plus diff/source review; no comprehensive-secret-scan claim |
 | PostgreSQL | Real migrations, transactions, tampering and runtime-role tests | Passed on PostgreSQL 16.3 including actual restricted pool; 17.6/deployment operations remain unexecuted |
-| Performance | Recorded environment, workload, latency/throughput/verification time | M8; no invented production SLO |
-| Human review | Requirement-linked artifact acceptance | Pending for delivered M1-M7 outputs |
+| Performance | Recorded environment, workload, latency/throughput/verification time | M8 local baseline recorded, 186.665 appends/s at four clients; no invented production SLO |
+| Human review | Requirement-linked artifact acceptance | Pending for delivered M1-M8 outputs |
 
 CI runs on push/pull request when intentionally hosted. Adding a workflow is not executing it or authorization to publish. Dependency scanning may contact advisory services; never upload confidential source or secrets.
 
