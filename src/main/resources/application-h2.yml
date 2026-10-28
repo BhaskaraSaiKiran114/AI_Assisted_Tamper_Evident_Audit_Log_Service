@@ -5,5 +5,7 @@ spring:
     password: ""
     driver-class-name: org.h2.Driver
 audit:
+  jwt:
+    allow-unconfigured: true
   crypto:
     ephemeral-master-key: true

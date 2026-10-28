@@ -1,0 +1,13 @@
+# ADR-006: Pinned JWT trust, explicit permissions and restricted runtime credentials
+
+Date: 2026-10-28. Status: implemented in M4 under user authorization.
+
+Decision: use Spring Security Resource Server/Nimbus with a pinned RSA public key (RS256, >=2048 bits), exact issuer/audience and required subject/time claims. Map only explicitly recognized permissions from the permissions array; no scope/role prefix or administrator inheritance. Bearer headers only; no application login, token issuance endpoint, cookies or HTTP sessions. H2 without a key rejects every token; PostgreSQL requires configuration. The separate dependency-free source launcher mints short-lived local tokens and restricts its private-key file permissions.
+
+Protect the complete OpenAPI/Swagger surface with independent AUDIT_DOCS. Document each operation's exact permission and reject new unmapped operations in specification generation. Auth errors use safe generic problem bodies. A per-process verification semaphore bounds full scans after business access is enabled; it releases permits on failures too.
+
+Separate Flyway's schema-owning audit_migrator from the runtime pool's audit_runtime. Use fresh-cluster bootstrap and a new PostgreSQL-only V3 migration; do not edit applied V1/V2 or silently take over existing databases. Restrict event/key tables to SELECT/INSERT and head updates to two columns. No runtime DDL, event mutation, key deletion, temporary tables, role escalation or migration-history reading. Real runtime-pool tests, rather than owner-only tests, prove these permissions. Destructive fixtures require an extra cluster-role consent flag and refuse existing role names.
+
+Alternatives: custom JWT parsers/identity providers increase security surface; trusting token alg/kid/jku content as configuration permits trust confusion; automatic scope/role inheritance can overgrant; a schema-owner runtime defeats database append-only privileges; granting key deletion early widens lifecycle authority before M5. Public Swagger would permit easier initial browser navigation but does not meet the protected-documentation contract.
+
+Consequences: coarse service-wide permissions, single verification key with restart-based rotation, no online revocation/refresh/JWKS discovery, explicit bearer headers needed for Swagger HTML/assets, and a bounded local scan budget rather than distributed quota. Startup migration secrets remain in-process until operations separate the migration job. Existing data needs a reviewed ownership/role upgrade. H2 remains a disposable demo without PostgreSQL role claims. See security-and-api.md and M4 evidence for exact behavior and remaining limits.

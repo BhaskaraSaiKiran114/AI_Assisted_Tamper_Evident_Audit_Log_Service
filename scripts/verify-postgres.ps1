@@ -18,7 +18,7 @@ foreach ($binary in @('initdb.exe', 'pg_ctl.exe', 'createdb.exe')) {
 }
 $savedEnvironment = @{}
 foreach ($name in @('PGPASSWORD', 'AUDIT_TEST_DB_URL', 'AUDIT_TEST_DB_USERNAME',
-        'AUDIT_TEST_DB_PASSWORD', 'AUDIT_TEST_DB_DESTRUCTIVE_OK')) {
+        'AUDIT_TEST_DB_PASSWORD', 'AUDIT_TEST_DB_DESTRUCTIVE_OK', 'AUDIT_TEST_CLUSTER_ROLES_OK')) {
     $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
 }
 $started = $false
@@ -53,6 +53,7 @@ try {
     $env:AUDIT_TEST_DB_USERNAME = 'audit_test'
     $env:AUDIT_TEST_DB_PASSWORD = $password
     $env:AUDIT_TEST_DB_DESTRUCTIVE_OK = 'yes'
+    $env:AUDIT_TEST_CLUSTER_ROLES_OK = 'yes'
     $mavenArguments = @('--batch-mode', '--no-transfer-progress', '-Ppostgres-it', 'clean', 'verify')
     if ($MavenRepository) {
         $mavenArguments += "-Dmaven.repo.local=$MavenRepository"

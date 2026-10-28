@@ -5,6 +5,7 @@ import static com.example.auditlog.audit.VerificationResult.ViolationType.PREVIO
 import static com.example.auditlog.audit.VerificationResult.ViolationType.SEQUENCE_GAP;
 
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 
 import com.example.auditlog.audit.VerificationResult.ChainHead;
 import com.example.auditlog.audit.VerificationResult.Inconsistency;
@@ -13,6 +14,7 @@ import com.example.auditlog.persistence.AuditReadRepository;
 import com.example.auditlog.persistence.StoredEvent;
 import com.example.auditlog.persistence.ReadSnapshot;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class ChainVerificationService {
@@ -20,15 +22,28 @@ public class ChainVerificationService {
     private final AuditReadRepository repository;
     private final EventIntegrityChecker checker;
     private final ReadSnapshot snapshots;
+    private final Semaphore permits;
 
-    public ChainVerificationService(AuditReadRepository repository, EventIntegrityChecker checker, ReadSnapshot snapshots) {
+    public ChainVerificationService(AuditReadRepository repository, EventIntegrityChecker checker, ReadSnapshot snapshots,
+            @Value("${audit.verification.max-concurrent:2}") int maxConcurrent) {
         this.repository = repository;
         this.checker = checker;
         this.snapshots = snapshots;
+        if (maxConcurrent < 1 || maxConcurrent > 16) {
+            throw new IllegalArgumentException("Verification concurrency must be from 1 to 16");
+        }
+        permits = new Semaphore(maxConcurrent);
     }
 
     public VerificationResult verify() {
-        return snapshots.execute(60, this::verifySnapshot);
+        if (!permits.tryAcquire()) {
+            throw new AuditQueryException(429, "Verification capacity exhausted; retry later");
+        }
+        try {
+            return snapshots.execute(60, this::verifySnapshot);
+        } finally {
+            permits.release();
+        }
     }
 
     private VerificationResult verifySnapshot() {

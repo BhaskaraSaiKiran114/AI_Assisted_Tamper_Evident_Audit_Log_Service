@@ -43,12 +43,12 @@ class FoundationIntegrationTest {
     }
 
     @Test
-    void auditAndDocumentationAccessAreDeniedUntilSecurityMilestone() throws Exception {
-        mvc.perform(get("/audit/events")).andExpect(status().isForbidden());
-        mvc.perform(get("/audit/verify")).andExpect(status().isForbidden());
+    void auditAndDocumentationRequireBearerAuthentication() throws Exception {
+        mvc.perform(get("/audit/events")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/audit/verify")).andExpect(status().isUnauthorized());
         mvc.perform(post("/audit/events").contentType("application/json").content("{}"))
-                .andExpect(status().isForbidden());
-        mvc.perform(get("/v3/api-docs")).andExpect(status().isForbidden());
-        mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isUnauthorized());
     }
 }

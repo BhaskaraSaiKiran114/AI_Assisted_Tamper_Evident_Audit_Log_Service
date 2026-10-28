@@ -1,6 +1,6 @@
 # Tamper-Evident Audit Log Service
 
-Engineer-led Java prototype. **Milestones 1-3 complete (3/8, 37.5%).** Validated ingestion, protected payloads, transactional hash-chain appends, filtered reads, signed cursor pagination and full-chain verification are implemented. JWT/permissions, lifecycle, export and compliance remain planned. Business HTTP access stays denied until M4.
+Engineer-led Java prototype. **Milestones 1-4 complete (4/8, 50%).** Ingestion, protected payloads, atomic hash-chain append, filtered reads/pagination, verification, JWT permissions, protected OpenAPI/Swagger and restricted PostgreSQL runtime credentials are implemented. Retention/redaction, export and compliance remain planned.
 
 ## Engineering baseline
 
@@ -11,12 +11,13 @@ Engineer-led Java prototype. **Milestones 1-3 complete (3/8, 37.5%).** Validated
 - [M1 validation](docs/validation/milestone-1.md), [AI usage](AI_USAGE_LOG.md), [unsigned attestation](ATTESTATION.md), [living summary](docs/final-engineering-summary.md)
 - [M2 validation](docs/validation/milestone-2.md) and [exact ingestion/encoding v1 contract](docs/encoding-v1.md)
 - [M3 validation](docs/validation/milestone-3.md), [query/verification contract](docs/query-verification.md), and [snapshot/cursor decision](docs/decisions/ADR-005-read-snapshots-and-pagination.md)
+- [M4 validation](docs/validation/milestone-4.md), [security/API setup](docs/security-and-api.md), and [authentication/role decision](docs/decisions/ADR-006-authentication-and-runtime-roles.md)
 
 ## Prerequisites
 
 JDK **21**, with JAVA_HOME pointing to its directory. The wrapper downloads pinned Maven 3.9.16/dependencies on first use; no global Maven needed. Optional Docker Compose requires a running daemon for PostgreSQL 17.6.
 
-Stack: Spring Boot 4.1.0, Spring MVC/JDBC/Security Resource Server, Flyway, PostgreSQL/H2, Springdoc OpenAPI/Swagger and Boot-managed JUnit. JWT and OpenAPI dependencies are present; behavior is deferred to M4. Public references: [Spring Boot](https://docs.spring.io/spring-boot/system-requirements.html), [Springdoc](https://springdoc.org/), [Maven wrapper](https://maven.apache.org/tools/wrapper/).
+Stack: Spring Boot 4.1.0, Spring MVC/JDBC/Security Resource Server, Flyway, PostgreSQL/H2, Springdoc OpenAPI/Swagger and Boot-managed JUnit. Public references: [Spring Boot](https://docs.spring.io/spring-boot/system-requirements.html), [Springdoc](https://springdoc.org/), [Maven wrapper](https://maven.apache.org/tools/wrapper/).
 
 ## Build and run (disposable H2)
 
@@ -25,6 +26,8 @@ PowerShell:
 ```powershell
 $env:JAVA_HOME = 'C:\path\to\jdk-21'
 .\mvnw.cmd --batch-mode --no-transfer-progress clean verify
+& "$env:JAVA_HOME\bin\java.exe" scripts/LocalJwt.java init .tools/jwt
+$env:AUDIT_JWT_PUBLIC_KEY_BASE64 = (Get-Content .tools/jwt/public-key-base64.txt -Raw).Trim()
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -33,32 +36,39 @@ POSIX:
 ```sh
 export JAVA_HOME=/path/to/jdk-21
 bash ./mvnw --batch-mode --no-transfer-progress clean verify
+"$JAVA_HOME/bin/java" scripts/LocalJwt.java init .tools/jwt
+export AUDIT_JWT_PUBLIC_KEY_BASE64="$(cat .tools/jwt/public-key-base64.txt)"
 bash ./mvnw spring-boot:run
 ```
 
 Or run with Java 21: `java -jar target/audit-log-service-0.1.0-SNAPSHOT.jar`.
 
-Default `h2` profile keeps data and its ephemeral master key in memory until process termination. PostgreSQL compatibility mode is not PostgreSQL proof. Flyway initializes chain head, event storage and wrapped field-key storage. Server binds to 127.0.0.1:8080. GET /actuator/health is public/minimal; business requests remain denied until M4. OpenAPI/Swagger remains disabled. No token issuer is implemented.
+Run key initialization once; it refuses overwriting existing keys. Reuse the existing public-key file on later starts. Default h2 keeps data/master key in memory and is not PostgreSQL proof. Server binds to 127.0.0.1:8080. GET /actuator/health is public/minimal. Business routes require valid Bearer tokens and explicit AUDIT_WRITE/READ/VERIFY; OpenAPI/Swagger including assets requires AUDIT_DOCS. Without a configured key, H2 starts but accepts no token. See the security guide for captured five-minute local tokens and authenticated API examples; no token-issuing server endpoint exists.
 
 ## PostgreSQL local profile
 
 ```powershell
 Copy-Item .env.example .env
-# Edit .env and replace the sample password before starting.
+# Fill all three distinct passwords in .env before starting a NEW dedicated volume.
 docker compose up -d postgres
 $env:SPRING_PROFILES_ACTIVE = 'postgres'
 $env:AUDIT_DB_URL = 'jdbc:postgresql://localhost:5432/auditlog'
-$env:AUDIT_DB_USERNAME = 'auditlog'
-$env:AUDIT_DB_PASSWORD = '<same password you put in .env>'
+$env:AUDIT_DB_USERNAME = 'audit_runtime'
+$env:AUDIT_DB_PASSWORD = '<runtime password from .env>'
+$env:AUDIT_MIGRATION_USERNAME = 'audit_migrator'
+$env:AUDIT_MIGRATION_PASSWORD = '<migration password from .env>'
 $env:AUDIT_MASTER_KEY_BASE64 = '<securely generated Base64-encoded 32-byte key>'
+$env:AUDIT_JWT_PUBLIC_KEY_BASE64 = (Get-Content .tools/jwt/public-key-base64.txt -Raw).Trim()
 .\mvnw.cmd spring-boot:run
 ```
 
-Compose reads .env; Spring Boot does **not** automatically read it. Set shell variables as shown. Generate a master key once (for example `[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))` in PowerShell 7) and save it securely outside Git/database; do not generate a replacement on every restart. Losing it loses access to protected fields. Default protected payload paths are /accountNumber and /personalIdentifier; configure AUDIT_PROTECTED_PATHS before ingestion. See the encoding contract for limits. If POSTGRES_PORT changes, update AUDIT_DB_URL. Never commit credentials. `docker compose stop` preserves data. The development account owns this local database for Flyway; deployment needs separate migrator and restricted runtime accounts. PostgreSQL has no default password in app configuration. Do not activate H2 and PostgreSQL profiles together.
+Compose reads .env; Spring Boot does **not** automatically read it. Fresh-volume initialization creates separate audit_migrator/audit_runtime roles; Flyway owns/migrates the schema and V3 grants runtime append/read/head-update privileges only. Empty example passwords deliberately prevent Compose startup. Existing volumes/role names are not automatically upgraded or reset: review the security guide before reusing earlier M1-M3 data. No destructive reset is prescribed.
+
+Generate the payload master key once (for example `[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))` in PowerShell 7) and preserve it securely outside Git/database across restarts. Losing it loses protected values. JWT public key, payload master key and optional cursor signing key have separate purposes. Default protected paths are /accountNumber,/personalIdentifier. If POSTGRES_PORT changes, update AUDIT_DB_URL. `docker compose stop` preserves data. Do not activate H2 and PostgreSQL profiles together. See security/API setup for privilege boundaries and production migration-job separation.
 
 ## Reference-database verification
 
-Normal verify runs 47 unit/H2 tests. The explicit postgres-it profile adds 24 reference tests (8 append + 16 query/verification) and requires an isolated database named audit_m2_test, AUDIT_TEST_DB_URL/USERNAME/PASSWORD and AUDIT_TEST_DB_DESTRUCTIVE_OK=yes. It fails if consent/configuration is missing. These tests clear/corrupt only their explicitly configured disposable database and introduce/drop a test constraint; never point them at useful data.
+Normal verify runs 63 unit/H2/security tests. postgres-it adds 26 reference cases (8 append, 16 read/verify, 2 real runtime-role cases). It requires a fresh disposable cluster/database audit_m2_test, administrator AUDIT_TEST_DB_URL/USERNAME/PASSWORD, AUDIT_TEST_DB_DESTRUCTIVE_OK=yes and AUDIT_TEST_CLUSTER_ROLES_OK=yes. Tests create cluster-wide roles, clear/corrupt fixture data and verify denied mutations. Existing role names or missing consent cause refusal. Never target a shared server or useful data; the runner sets consent only for its new cluster.
 
 Windows with installed PostgreSQL binaries can create, test and stop a separate temporary cluster without Docker or using an existing service:
 
@@ -70,7 +80,7 @@ The script uses a fresh GUID-named cluster under ignored .tools, generated local
 
 ## Query and verification (M3)
 
-Implemented adapters: GET /audit/events, GET /audit/events/{eventId}, and GET /audit/verify. The real application still denies these requests until M4; standalone MVC tests validate their contracts. No permissive test profile is added.
+Implemented: GET /audit/events, GET /audit/events/{eventId}, and GET /audit/verify. M4 enables them with valid JWTs and their explicit permissions. Tests cover the real security filter/decoder as well as the standalone adapter contracts; no permissive application profile exists.
 
 Queries combine actorId/resourceType/resourceId/eventType/from/to, default to 50 results (maximum 200), and return nextCursor plus snapshotHead. Continue with the same filters and limit. Times use inclusive from/exclusive to. Signed cursors exclude later appends; set a separate AUDIT_CURSOR_KEY_BASE64 for persistence across restarts/instances, or default process-random keys invalidate old cursors after restart. Missing/changed cursor anchor is 409, invalid filters/cursor 400, missing event 404. Returned payload restores protected values; missing/invalid keys are 503 until audited redaction is defined in M5.
 
@@ -78,7 +88,7 @@ Verification traverses all stored records and reports intact, checkedCount, snap
 
 ## Quality gates
 
-Normal `clean verify` enforces toolchain, checks Java style, compiles, runs foundation/ingestion/query/verification/cryptographic JUnit tests and packages the app. The postgres-it profile adds Failsafe reference tests. The M3 combined run passed all 71 tests, including direct tampering and concurrent snapshot checks. CI is configured with Java 21 and a disposable PostgreSQL service; adding it is not an external CI execution.
+Normal clean verify enforces Java 21, Checkstyle, compilation, foundation/domain/security tests and packaging. postgres-it adds reference tests. M4 passed all 89 cases, including real JWTs, protected schemas/UI assets, direct tampering, snapshot concurrency, the actual local-token helper and runtime-role denials. CI is configured with Java 21 and a disposable PostgreSQL service; remote CI is not claimed executed.
 
 ```powershell
 .\mvnw.cmd -Psecurity-audit verify

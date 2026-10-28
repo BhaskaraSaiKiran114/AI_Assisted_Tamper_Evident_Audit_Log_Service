@@ -1,6 +1,6 @@
 # Query and chain verification contract
 
-Implemented in M3. Business HTTP remains denied by the running application's security policy until JWT/permissions in M4. Standalone MVC tests exercise the adapters without installing a permissive runtime profile. No update/delete operation is added.
+Implemented in M3 and enabled by M4 JWT permissions: AUDIT_READ for query/lookup, AUDIT_VERIFY for verification. Tests cover both standalone adapters and the actual security filter/decoder; no permissive runtime profile or update/delete operation exists. See security-and-api.md.
 
 ## Event queries
 
@@ -17,7 +17,7 @@ limit defaults to 50 and must be 1-200. Results are in ascending immutable seque
 }
 ```
 
-Each event contains eventId, sequence, eventType, actorId, resourceType, resourceId, payload, timestamp, ingestedAt, previousHash and recordHash. GET /audit/events/{eventId} returns one event, 404 if absent, 400 for a malformed UUID. Committed bytes are checked against their digest and query columns before an event is returned. Query response payload restores protected values using the corresponding wrapped keys; raw keys are never returned. recordHash commits the stored protected representation, not this decrypted response; use full verification now or the future M6 bundle for integrity evidence. An unavailable/malformed key or failed authenticated decryption is 503, not a claim of legitimate redaction. M5 will introduce audited redaction markers and lifecycle rules. Readers will require AUDIT_READ permission in M4; no anonymous decryption endpoint exists.
+Each event contains eventId, sequence, eventType, actorId, resourceType, resourceId, payload, timestamp, ingestedAt, previousHash and recordHash. GET /audit/events/{eventId} returns one event, 404 if absent, 400 for a malformed UUID. Committed bytes are checked against their digest and query columns before an event is returned. Protected values are restored using wrapped keys; raw keys are never returned. recordHash commits the stored protected representation, not decrypted response; use verification now or M6's future bundle for evidence. Missing/malformed keys or authenticated-decryption failure is 503, not legitimate redaction. M5 will introduce audited redaction markers. AUDIT_READ is now enforced; no anonymous decryption endpoint exists.
 
 ## Cursor semantics
 
@@ -65,4 +65,4 @@ The H2 concurrency test initially exposed phantom rows under REPEATABLE_READ. H2
 
 Verification uses a closable JDBC stream and fetch size 100; PostgreSQL reads inside a transaction. H2 is a demo datastore and may materialize results internally. Application processing keeps one current event rather than accumulating the chain. Memory still depends on stored record size, and full verification is O(n). Decoding keeps strict nesting/string/number constraints without imposing the original request-byte limit on ciphertext-expanded stored records. Query decryption currently makes a bounded per-event key lookup (N+1 queries, at most 200 returned events).
 
-Query transaction timeout setting is 30 seconds; verification is 60 seconds. These govern database transaction/statement behavior, not a hard CPU/wall-clock service SLA. Concurrency/rate limits and performance budgets remain M4/M8. Independent checkpoints, whole-database rollback defense, archive/redaction behavior and export verification remain later work. A privileged attacker who coherently rewrites all rows, hashes and head can evade same-database verification.
+Query transaction timeout setting is 30 seconds; verification is 60 seconds. These govern database behavior, not a hard CPU/wall-clock SLA. M4 limits simultaneous verification scans per process (default 2; excess is 429); distributed quotas and measured budgets remain later work. Independent checkpoints, whole-database rollback defense, archive/redaction and exports remain planned. A privileged attacker coherently rewriting all rows/hashes/head can evade same-database verification; runtime credentials now lack event mutation/DDL privileges.

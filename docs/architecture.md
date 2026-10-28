@@ -1,10 +1,10 @@
 # Architecture baseline
 
-Status: M1-M3 implemented under separate user authorizations on 2026-10-28. Ingestion, event/key schema, transactional chaining, filtered reads, cursor pagination and full verification are implemented. JWT, lifecycle, export and reporting remain planned. See `encoding-v1.md`, `query-verification.md`, ADR-005 and milestone evidence for exact behavior and limits.
+Status: M1-M4 implemented under separate user authorizations on 2026-10-28. Ingestion, schema/chaining, queries, verification, JWT permissions, protected OpenAPI/Swagger and PostgreSQL runtime grants are implemented. Lifecycle, export and reporting remain planned. See encoding/read/security contracts, ADRs and milestone evidence for exact behavior and limits.
 
 ## Components and dependencies
 
-One Java 21 / Spring Boot 4.1.0 Maven application. Spring MVC handles REST, Bean Validation checks requests, Spring JDBC provides explicit SQL and transactions, Flyway owns migrations, Spring Security Resource Server will validate JWTs, Springdoc supplies OpenAPI/Swagger, and Boot-managed JUnit supplies tests. PostgreSQL is the reference datastore; H2 in PostgreSQL mode is a disposable local/test convenience.
+One Java 21 / Spring Boot 4.1.0 Maven application. Spring MVC handles REST, the strict event parser enforces input constraints, Spring JDBC provides explicit SQL/transactions, Flyway owns migrations, Spring Security Resource Server validates JWTs, Springdoc supplies protected OpenAPI/Swagger, and Boot-managed JUnit supplies tests. PostgreSQL is the reference datastore; H2 PostgreSQL mode is a disposable convenience with no equivalent role-hardening claim.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
   Reporting --> Trust[Signing key and external checkpoints]
 ```
 
-Packages separate `api`, `security`, `audit` and `persistence`; lifecycle/reporting will follow. M2 stores wrapped field keys in payload_key, with the master key outside the database (ephemeral only for H2). Runtime key/event privilege separation and checkpoints remain future work; this is not an enterprise KMS.
+Packages separate api, security, audit and persistence; lifecycle/reporting will follow. Wrapped field keys are in payload_key, master key outside PostgreSQL (ephemeral for H2). M4 restricts runtime event/key access and separates migration credentials; lifecycle-specific key deletion and external checkpoints remain future work. This is not an enterprise KMS.
 
 ## Persistence model
 
@@ -34,7 +34,7 @@ Packages separate `api`, `security`, `audit` and `persistence`; lifecycle/report
 | payload_key | event_id + field path + key version, independently protected key material/status | Added with redactable ingestion representation and erased in M5 |
 | lifecycle_action | action ID/type, target IDs/paths, reason, operator, policy version, timestamp, linked administrative event | Transactionally coordinated with archival/redaction in M5 |
 
-V2 uses BYTEA (also supported by H2 PostgreSQL mode), TEXT, UUID and TIMESTAMP(6) WITH TIME ZONE. Indexes cover actor/sequence, resource type+ID/sequence, event type/sequence and occurrence time; query-plan tuning remains M3/M8. Runtime privileges must differ from migration-owner credentials before deployment; Compose's local owner account is not a production permission model.
+V2 uses BYTEA (also supported by H2 PostgreSQL mode), TEXT, UUID and TIMESTAMP(6) WITH TIME ZONE. Indexes cover actor/sequence, resource type+ID/sequence, event type/sequence and occurrence time; measured tuning remains M8. PostgreSQL-only V3 grants audit_runtime SELECT/INSERT on events/keys and column-limited head updates; audit_migrator owns schema/tables. Fresh-cluster bootstrap revokes public creation/TEMP privileges and supplies separate logins. See security-and-api.md for existing-volume and startup-secret boundaries.
 
 ## Append and chain contract
 
@@ -70,7 +70,7 @@ This proves included content has not changed since export under the trusted sign
 
 ## API and target access policy
 
-Write/read/verification adapters are implemented through M3; runtime business access stays denied until M4 installs the permissions below. Lifecycle/export/compliance routes remain planned.
+Write/read/verification are now enabled through validated JWTs and the permissions below. Lifecycle/export/compliance routes remain denied until implemented. OpenAPI/Swagger including HTML/config/assets requires separate AUDIT_DOCS.
 
 | Operation | Permission | Contract |
 | --- | --- | --- |
@@ -82,7 +82,7 @@ Write/read/verification adapters are implemented through M3; runtime business ac
 | GET /audit/exports | AUDIT_EXPORT | Bounded bundle by actorId or resourceId; resourceType optional disambiguation |
 | GET /audit/compliance/access-report | AUDIT_COMPLIANCE | Restricted account-access summary without payload by default |
 
-Validate JWT signature algorithm, issuer, audience, expiry/not-before, and map explicit claims to authorities. Do not build a home-grown identity provider. M1 denies all access except GET health and disables docs; M4 enables protected API/docs and supplies local test-token guidance. Use consistent problem-detail errors without sensitive values. Limit verification/export concurrency and input sizes before final readiness.
+M4 pins RS256/RSA >=2048, validates issuer/audience and required subject/time claims with 30-second skew, and maps only recognized permissions strings. Bearer headers only, stateless, safe auth/domain errors; GET health is public. No server identity-provider/token endpoint exists. The actual developer source launcher is tested independently. Full verification has a per-process semaphore (default 2, 429 on exhaustion); export concurrency will be defined in M6 and measured budgets remain M8. Protected browser documentation requires bearer-header support; see the security contract.
 
 ## Security and production limits
 

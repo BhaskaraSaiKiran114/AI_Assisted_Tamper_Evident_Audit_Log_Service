@@ -1,6 +1,11 @@
 spring:
   datasource:
     url: ${AUDIT_DB_URL:jdbc:postgresql://localhost:5432/auditlog}
-    username: ${AUDIT_DB_USERNAME:auditlog}
+    username: ${AUDIT_DB_USERNAME:audit_runtime}
     password: ${AUDIT_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  flyway:
+    url: ${AUDIT_DB_URL:jdbc:postgresql://localhost:5432/auditlog}
+    user: ${AUDIT_MIGRATION_USERNAME:audit_migrator}
+    password: ${AUDIT_MIGRATION_PASSWORD}
+    locations: classpath:db/migration,classpath:db/postgres

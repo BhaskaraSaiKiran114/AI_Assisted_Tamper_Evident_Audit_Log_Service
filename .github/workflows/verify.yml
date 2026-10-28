@@ -24,6 +24,7 @@ jobs:
       AUDIT_TEST_DB_USERNAME: audit_test
       AUDIT_TEST_DB_PASSWORD: ephemeral-ci-test-only
       AUDIT_TEST_DB_DESTRUCTIVE_OK: 'yes'
+      AUDIT_TEST_CLUSTER_ROLES_OK: 'yes'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

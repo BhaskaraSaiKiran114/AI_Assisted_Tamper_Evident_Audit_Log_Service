@@ -24,10 +24,19 @@ management:
       show-details: never
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
   swagger-ui:
-    enabled: false
+    enabled: true
+    persist-authorization: false
+    disable-swagger-default-url: true
+  paths-to-match: /audit/**
 audit:
+  jwt:
+    issuer: ${AUDIT_JWT_ISSUER:urn:audit-log:local}
+    audience: ${AUDIT_JWT_AUDIENCE:audit-log-service}
+    public-key-base64: ${AUDIT_JWT_PUBLIC_KEY_BASE64:}
+  verification:
+    max-concurrent: ${AUDIT_VERIFY_MAX_CONCURRENT:2}
   crypto:
     master-key-base64: ${AUDIT_MASTER_KEY_BASE64:}
   payload:
